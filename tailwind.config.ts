@@ -1,44 +1,51 @@
 import type { Config } from "tailwindcss";
 
+/**
+ * Design tokens — "the notebook, after dark".
+ * The approved notebook identity (paper, ink, ballpoint blue) carried into
+ * a dark, cinematic universe. Every colour is a CSS variable in globals.css
+ * so the signature accent can be swapped in one place.
+ */
 export default {
-  content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./src/**/*.{ts,tsx,mdx}"],
   theme: {
     extend: {
       colors: {
+        void: "rgb(var(--void) / <alpha-value>)",
+        hull: "rgb(var(--hull) / <alpha-value>)",
         paper: "rgb(var(--paper) / <alpha-value>)",
-        ink: "rgb(var(--ink) / <alpha-value>)",
-        blue: "rgb(var(--blue) / <alpha-value>)",
-        red: "rgb(var(--red) / <alpha-value>)",
-        muted: "rgb(var(--muted) / <alpha-value>)",
+        dust: "rgb(var(--dust) / <alpha-value>)",
         faint: "rgb(var(--faint) / <alpha-value>)",
+        line: "rgb(var(--line) / <alpha-value>)",
+        signal: "rgb(var(--signal) / <alpha-value>)",
+        "signal-hi": "rgb(var(--signal-hi) / <alpha-value>)",
+        alarm: "rgb(var(--alarm) / <alpha-value>)",
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "ui-sans-serif", "system-ui"],
-        mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
         display: ["var(--font-display)", "ui-sans-serif", "system-ui"],
+        sans: ["var(--font-display)", "ui-sans-serif", "system-ui"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
-      boxShadow: {
-        print: "5px 5px 0 0 rgb(var(--ink))",
-        "print-sm": "3px 3px 0 0 rgb(var(--ink))",
-        "print-blue": "5px 5px 0 0 rgb(var(--blue))",
-        "print-blue-sm": "3px 3px 0 0 rgb(var(--blue))",
+      fontSize: {
+        // Fluid display scale, clamp(min, preferred, max)
+        "d-1": ["clamp(3.25rem, 11.5vw, 13rem)", { lineHeight: "0.86", letterSpacing: "-0.045em" }],
+        "d-2": ["clamp(2.5rem, 7vw, 7.5rem)", { lineHeight: "0.9", letterSpacing: "-0.035em" }],
+        "d-3": ["clamp(1.9rem, 4vw, 3.75rem)", { lineHeight: "0.98", letterSpacing: "-0.025em" }],
+        micro: ["0.6875rem", { lineHeight: "1rem", letterSpacing: "0.18em" }],
+      },
+      transitionTimingFunction: {
+        "out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "in-out-quart": "cubic-bezier(0.76, 0, 0.24, 1)",
       },
       animation: {
-        marquee: "marquee var(--duration) infinite linear",
-        "marquee-vertical": "marquee-vertical var(--duration) linear infinite",
+        blink: "blink 1.1s steps(2, start) infinite",
+        marquee: "marquee var(--duration, 40s) linear infinite",
       },
       keyframes: {
+        blink: { to: { visibility: "hidden" } },
         marquee: {
           from: { transform: "translateX(0)" },
-          to: { transform: "translateX(calc(-100% - var(--gap)))" },
-        },
-        "marquee-vertical": {
-          from: { transform: "translateY(0)" },
-          to: { transform: "translateY(calc(-100% - var(--gap)))" },
+          to: { transform: "translateX(calc(-50% - var(--gap, 0px) / 2))" },
         },
       },
     },

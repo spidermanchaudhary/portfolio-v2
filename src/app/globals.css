@@ -2,207 +2,185 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Colors are RGB triplets so Tailwind alpha modifiers keep working */
+/* ─────────────────────────────────────────────────────────────
+   Tokens. Change --signal / --signal-hi to re-theme the universe;
+   the WebGL scenes read the same values via src/lib/palette.ts.
+   ───────────────────────────────────────────────────────────── */
 :root {
-  --paper: 247 246 241;
-  --ink: 26 28 35;
-  --blue: 37 71 244;
-  --red: 217 72 43;
-  --muted: 80 84 95;
-  --faint: 144 148 160;
-  --grid: rgba(37, 71, 244, 0.07);
+  --void: 8 8 10; /* #08080A — warm near-black */
+  --hull: 18 18 21; /* #121215 — raised surfaces */
+  --paper: 236 234 227; /* #ECEAE3 — the notebook paper, now starlight */
+  --dust: 150 148 140; /* #96948C — secondary text (7.0:1 on void) */
+  --faint: 92 91 86; /* #5C5B56 — tertiary, decorative only */
+  --line: 46 46 50; /* #2E2E32 — hairlines */
+  --signal: 61 92 255; /* #3D5CFF — Cherenkov blue: the ballpoint, glowing */
+  --signal-hi: 125 146 255; /* #7D92FF — accent for text (6.6:1 on void) */
+  --alarm: 255 107 94; /* #FF6B5E — errors only */
+
+  color-scheme: dark;
 }
 
-html {
-  scroll-behavior: smooth;
-  background-color: rgb(var(--paper));
+@layer base {
+  html {
+    background: rgb(var(--void));
+    color: rgb(var(--paper));
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Lenis owns smooth scrolling; native smooth would fight it. */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  body {
+    min-height: 100svh;
+    font-feature-settings: "ss01", "ss02";
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background: rgb(var(--signal));
+    color: rgb(var(--paper));
+  }
+
+  /* One visible, consistent focus ring everywhere */
+  :focus-visible {
+    outline: 2px solid rgb(var(--signal-hi));
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Native scrollbars hidden; the HUD shows progress instead */
+  html {
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-/* Graph-paper ground */
-body {
-  background-color: rgb(var(--paper));
-  background-image: linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 28px 28px;
-  color: rgb(var(--ink));
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  overflow-x: hidden;
-  transition: background-color 0.5s ease, color 0.5s ease;
+@layer components {
+  /* Mono "developer voice" label */
+  .label {
+    @apply font-mono text-micro uppercase text-dust;
+  }
+
+  /* Hairline frame with corner ticks — instrument-panel chrome */
+  .ticks {
+    position: relative;
+  }
+  .ticks::before,
+  .ticks::after {
+    content: "";
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    border-color: rgb(var(--paper) / 0.55);
+    pointer-events: none;
+  }
+  .ticks::before {
+    top: -1px;
+    left: -1px;
+    border-top: 1px solid;
+    border-left: 1px solid;
+  }
+  .ticks::after {
+    bottom: -1px;
+    right: -1px;
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+  }
+
+  /* Glass-free panel: solid, slightly lifted, hairline border */
+  .panel {
+    @apply border border-line bg-hull/80 backdrop-blur-md;
+  }
+
+  /* Text link with an ink underline that draws in from the left */
+  .link-ink {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .link-ink:hover,
+  .link-ink:focus-visible {
+    background-size: 100% 1px;
+  }
 }
 
-::selection {
-  background: rgb(var(--blue));
-  color: rgb(var(--paper));
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  /* Display face width axis — condensed for cinematic headlines */
+  .wdth-cond {
+    font-variation-settings: "wdth" 75;
+  }
+  .wdth-norm {
+    font-variation-settings: "wdth" 100;
+  }
 }
 
-/* No scrollbars — the margin pencil tracks scroll position instead */
-::-webkit-scrollbar {
-  display: none;
-}
-html {
-  scrollbar-width: none;
-}
-
-:focus-visible {
-  outline: 2px solid rgb(var(--blue));
-  outline-offset: 3px;
-}
-
-/* Marker-highlight sweep behind text on hover */
-.highlight-hover {
-  background-image: linear-gradient(
-    rgb(var(--blue) / 0.22),
-    rgb(var(--blue) / 0.22)
-  );
-  background-repeat: no-repeat;
-  background-size: 0% 45%;
-  background-position: 0 80%;
-  transition: background-size 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.highlight-hover:hover,
-.highlight-hover:focus-visible {
-  background-size: 100% 45%;
+/* Custom cursor: hide the native one only for fine pointers once the
+   custom cursor has mounted (it adds .has-cursor to <html>). Text inputs
+   keep the native caret. */
+@media (pointer: fine) {
+  html.has-cursor,
+  html.has-cursor * {
+    cursor: none !important;
+  }
+  html.has-cursor input,
+  html.has-cursor textarea {
+    cursor: text !important;
+  }
 }
 
-/* Permanent marker highlight for key words */
-.marker {
-  background-image: linear-gradient(
-    rgb(var(--blue) / 0.2),
-    rgb(var(--blue) / 0.2)
-  );
-  background-repeat: no-repeat;
-  background-size: 100% 42%;
-  background-position: 0 82%;
-}
-
-/* Pen-line underline reveal */
-.link-pen {
-  position: relative;
-}
-.link-pen::after {
+/* Film grain fallback for when WebGL post-processing is off */
+.grain::after {
   content: "";
-  position: absolute;
-  left: 0;
-  bottom: -3px;
-  height: 2px;
-  width: 100%;
-  background: rgb(var(--blue));
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.link-pen:hover::after,
-.link-pen:focus-visible::after {
-  transform: scaleX(1);
-  transform-origin: left;
-}
-
-/* Ruled index-card lines */
-.ruled {
-  background-image: repeating-linear-gradient(
-    transparent,
-    transparent 25px,
-    rgb(var(--blue) / 0.12) 25px,
-    rgb(var(--blue) / 0.12) 26px
-  );
-}
-
-/* Cute mode (type "cute"): pastel palette comes from JS; here every corner goes soft */
-html.cute * {
-  border-radius: 12px;
-}
-
-/* Cute-mode cat: patrols the bottom edge, bobbing as it goes; click to pet */
-.cute-cat {
   position: fixed;
-  bottom: 2px;
-  left: -70px;
-  z-index: 260;
-  border: 0;
-  background: none;
-  padding: 0;
-  font-size: 34px;
-  line-height: 1;
-  cursor: pointer;
-  animation: cat-walk 36s linear infinite;
-}
-.cute-cat-body {
-  display: inline-block;
-  animation: cat-bob 0.5s ease-in-out infinite alternate;
-}
-/* The 🐈 glyph faces left; scaleX(-1) turns it toward its walking direction */
-@keyframes cat-walk {
-  0% {
-    transform: translateX(0) scaleX(-1);
-  }
-  48% {
-    transform: translateX(calc(100vw + 140px)) scaleX(-1);
-  }
-  50% {
-    transform: translateX(calc(100vw + 140px)) scaleX(1);
-  }
-  98% {
-    transform: translateX(0) scaleX(1);
-  }
-  100% {
-    transform: translateX(0) scaleX(-1);
-  }
-}
-@keyframes cat-bob {
-  from {
-    transform: translateY(0) rotate(-2deg);
-  }
-  to {
-    transform: translateY(-3px) rotate(2deg);
-  }
-}
-
-/* Cute-mode hearts drifting up from the bottom of the page */
-.cute-heart {
-  position: fixed;
-  bottom: -24px;
-  z-index: 255;
-  color: rgb(var(--blue) / 0.7);
+  inset: -50%;
+  z-index: 60;
   pointer-events: none;
-  animation: heart-float 4s ease-in forwards;
-}
-@keyframes heart-float {
-  0% {
-    transform: translateY(0) rotate(-8deg);
-    opacity: 0;
-  }
-  15% {
-    opacity: 0.9;
-  }
-  100% {
-    transform: translateY(-45vh) rotate(10deg);
-    opacity: 0;
-  }
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
-/* Ink-splat confetti particle (spawned by easter eggs) */
-.ink-splat {
-  position: fixed;
-  z-index: 400;
-  pointer-events: none;
-  font-size: 18px;
-  line-height: 1;
-  will-change: transform, opacity;
-  transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.75s ease-out;
+/* Static universe used when WebGL is unavailable or motion is reduced */
+.static-sky {
+  background:
+    radial-gradient(1px 1px at 12% 22%, rgb(var(--paper) / 0.7), transparent 60%),
+    radial-gradient(1px 1px at 72% 14%, rgb(var(--paper) / 0.55), transparent 60%),
+    radial-gradient(1.5px 1.5px at 38% 68%, rgb(var(--paper) / 0.6), transparent 60%),
+    radial-gradient(1px 1px at 86% 58%, rgb(var(--paper) / 0.5), transparent 60%),
+    radial-gradient(1px 1px at 22% 86%, rgb(var(--paper) / 0.45), transparent 60%),
+    radial-gradient(1.5px 1.5px at 58% 36%, rgb(var(--signal-hi) / 0.8), transparent 60%),
+    radial-gradient(60% 50% at 70% 20%, rgb(var(--signal) / 0.14), transparent 70%),
+    radial-gradient(50% 40% at 15% 80%, rgb(var(--signal) / 0.08), transparent 70%),
+    rgb(var(--void));
+  background-size: 420px 420px, 380px 380px, 520px 520px, 300px 300px, 460px 460px, 640px 640px, 100% 100%, 100% 100%, auto;
+  background-attachment: fixed;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0.001ms !important;
   }
 }
