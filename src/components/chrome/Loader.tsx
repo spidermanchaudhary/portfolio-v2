@@ -68,7 +68,7 @@ export default function Loader() {
   if (phase === "gone") return null;
 
   const lines: [string, string][] = [
-    ["mount /data/worlds", `${projects.length} worlds`],
+    ["mount /data/projects", `${projects.length} shipped`],
     ["mount /data/toolbox", `${skills.length} instruments`],
     ["compile shaders", "curl · fresnel · grain"],
     ["seed particle field", particles],

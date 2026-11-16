@@ -12,13 +12,12 @@ const desiredLook = new THREE.Vector3();
 
 /**
  * Flies the camera along the track. Scroll sets `flight.t`; the rig
- * samples the spline there and damps toward it. When a world is focused
- * (/work/[slug]) the rig leaves the track and settles into a slow orbit
- * close to that planet — the "page transition" is just this camera move.
+ * samples the spline there and damps toward it. On a project page
+ * (/work/[slug]) it eases in to that project's station and drifts — the
+ * "page transition" is just this camera move.
  */
 export default function CameraRig({ stations }: { stations: Station[] }) {
   const camera = useThree((s) => s.camera);
-  const size = useThree((s) => s.size);
   const focusSlug = useUniverse((s) => s.focusSlug);
   const { projects } = useUniverseData();
   const curves = useMemo(() => buildCurves(stations), [stations]);
@@ -26,12 +25,11 @@ export default function CameraRig({ stations }: { stations: Station[] }) {
   const orbit = useRef(0);
   const lastZ = useRef(camera.position.z);
   const last = useRef(camera.position.clone());
-  const wide = size.width / size.height >= 1.1;
 
   const focus = useMemo(() => {
     if (!focusSlug) return null;
     const i = projects.findIndex((p) => p.slug === focusSlug);
-    return stations.find((s) => s.kind === "world" && s.index === i) ?? null;
+    return stations.find((s) => s.kind === "project" && s.index === i) ?? null;
   }, [focusSlug, projects, stations]);
 
   useFrame((_, rawDt) => {
@@ -40,16 +38,14 @@ export default function CameraRig({ stations }: { stations: Station[] }) {
     let lambda = 6.5;
 
     if (focus) {
-      // Close orbit around the focused planet
-      orbit.current += dt * 0.07;
-      const r = 4.6 * focus.scale;
+      // Project page: drift slowly at that project's station
+      orbit.current += dt * 0.12;
       const a = orbit.current;
-      desiredPos.set(
-        focus.anchor.x + Math.sin(a) * r * 0.35 + (wide ? -1.9 : 0),
-        focus.anchor.y + 0.6 + Math.sin(a * 0.7) * 0.25,
-        focus.anchor.z + r
-      );
-      desiredLook.set(focus.anchor.x + (wide ? -1.9 : 0) * 0.55, focus.anchor.y + (wide ? 0 : -1.2), focus.anchor.z);
+      desiredPos.copy(focus.cam);
+      desiredPos.x += Math.sin(a) * 0.6;
+      desiredPos.y += Math.sin(a * 0.7) * 0.3;
+      desiredPos.z -= 2.5; // a little closer than the scroll pose
+      desiredLook.copy(focus.look);
       lambda = 2.2;
     } else {
       const u = tToU(flight.t, n);
@@ -59,12 +55,9 @@ export default function CameraRig({ stations }: { stations: Station[] }) {
 
       // Launch: tilt up and follow the rocket (scrubbed by scroll, or
       // played after the contact form sends)
+      // Only a glance upward — the rocket stays background and leaves frame
       const alt = Math.min(flight.rocketAlt, 26);
-      if (alt > 0.01) {
-        desiredLook.y += alt * 0.82;
-        desiredPos.y += alt * 0.22;
-        desiredPos.z += alt * 0.12;
-      }
+      if (alt > 0.01) desiredLook.y += Math.min(alt, 6) * 0.3;
     }
 
     // Parallax from cursor (desktop) or device tilt (mobile)

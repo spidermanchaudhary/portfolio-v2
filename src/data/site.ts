@@ -66,7 +66,7 @@ export const sections: Section[] = [
   { id: "top", label: "Launchpad", hint: "Back to the start" },
   { id: "origin", label: "Origin", hint: "Where Sujal comes from" },
   { id: "toolbox", label: "Toolbox", hint: "The everyday stack" },
-  { id: "worlds", label: "Worlds", hint: "Products shipped into the wild" },
+  { id: "work", label: "Work", hint: "Products shipped into the wild" },
   { id: "signals", label: "Signals", hint: "Notes from people" },
   { id: "launch", label: "Launch", hint: "Start a conversation" },
 ];

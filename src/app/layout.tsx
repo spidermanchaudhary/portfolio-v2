@@ -54,7 +54,7 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   // Fetched once (ISR-cached); the persistent 3D universe needs the same
-  // data as the page so worlds line up with their HTML chapters.
+  // data as the page so the flight path lines up with the HTML chapters.
   const [projects, skills] = await Promise.all([getProjects(), getSkills()]);
 
   return (

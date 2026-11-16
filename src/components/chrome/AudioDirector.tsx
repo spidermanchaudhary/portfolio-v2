@@ -11,7 +11,7 @@ import { audio, sfx, type SfxName } from "@/lib/sfx";
 export default function AudioDirector() {
   const soundOn = useUniverse((s) => s.soundOn);
   const section = useUniverse((s) => s.activeSection);
-  const world = useUniverse((s) => s.activeWorld);
+  const project = useUniverse((s) => s.activeProject);
 
   useEffect(() => {
     try {
@@ -31,8 +31,8 @@ export default function AudioDirector() {
   }, [soundOn]);
 
   useEffect(() => {
-    audio.setSection(section, section === "worlds" ? world : -1);
-  }, [section, world]);
+    audio.setSection(section, section === "work" ? project : -1);
+  }, [section, project]);
 
   // Wind follows scroll speed (10Hz is plenty for audio params)
   useEffect(() => {

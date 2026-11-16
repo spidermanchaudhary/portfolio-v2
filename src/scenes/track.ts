@@ -1,15 +1,14 @@
 import * as THREE from "three";
 import type { Project } from "@/data/types";
-import { impactScale } from "@/data/projects";
 import { origin } from "@/data/origin";
 
-export type StationKind = "hero" | "origin" | "toolbox" | "world" | "signals" | "launch";
+export type StationKind = "hero" | "origin" | "toolbox" | "project" | "signals" | "launch";
 
 export interface Station {
   /** Matches the `data-station` attribute on the HTML chapter */
   key: string;
   kind: StationKind;
-  /** Index within its kind (origin chapter, world number) */
+  /** Index within its kind (origin chapter, project number) */
   index: number;
   /** Where the station's object lives */
   anchor: THREE.Vector3;
@@ -17,7 +16,7 @@ export interface Station {
   cam: THREE.Vector3;
   /** Camera look target when parked here */
   look: THREE.Vector3;
-  /** Planet radius multiplier (worlds) */
+  /** Distance multiplier */
   scale: number;
   /** Which side of the screen the object sits on: 1 right, -1 left */
   side: number;
@@ -91,14 +90,15 @@ export function buildTrack(projects: Project[], aspect: number): Station[] {
     side: 0,
   });
 
-  // Worlds: alternating sides, spaced so neighbours peek in the distance
+  // Projects: a gentle weave through open space — the screenshots live in
+  // the HTML; the camera just keeps the starfield moving behind them
   projects.forEach((p, i) => {
     const side = i % 2 === 0 ? 1 : -1;
-    const scale = impactScale(p.users);
+    const scale = 1;
     push(
       {
-        key: `world-${i}`,
-        kind: "world",
+        key: `project-${i}`,
+        kind: "project",
         index: i,
         anchor: v(side * 3.1, Math.sin(i * 1.3) * 1.1, -128 - i * 34),
         scale,
@@ -125,19 +125,6 @@ export function buildTrack(projects: Project[], aspect: number): Station[] {
     anchor: pad,
     cam: v(pad.x, pad.y + 1.1, pad.z + (wide ? 12.5 : 15)),
     look: v(pad.x, pad.y + (wide ? 1.5 : 3.4), pad.z),
-    scale: 1,
-    side: 1,
-  });
-
-  // Liftoff: the footer. Camera drops back and low; the rig tilts it up to
-  // follow the rocket (flight.rocketAlt) as the visitor scrolls.
-  stations.push({
-    key: "liftoff",
-    kind: "launch",
-    index: 1,
-    anchor: pad,
-    cam: v(pad.x + (wide ? 1.2 : 0), pad.y + 0.6, pad.z + (wide ? 15 : 19)),
-    look: v(pad.x, pad.y + 2.6, pad.z),
     scale: 1,
     side: 1,
   });

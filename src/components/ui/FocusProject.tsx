@@ -4,10 +4,10 @@ import { useEffect } from "react";
 import { useUniverse } from "@/store/universe";
 
 /**
- * Mounted by /work/[slug]: parks the camera at this world for direct visits
+ * Mounted by /work/[slug]: parks the camera at this project's station
  * and releases it on unmount.
  */
-export default function FocusWorld({ slug }: { slug: string }) {
+export default function FocusProject({ slug }: { slug: string }) {
   useEffect(() => {
     const { set } = useUniverse.getState();
     set({ focusSlug: slug });

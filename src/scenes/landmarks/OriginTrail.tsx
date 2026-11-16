@@ -111,12 +111,8 @@ export default function OriginTrail({ stations }: { stations: Station[] }) {
   );
 }
 
-const coreGeo = new THREE.IcosahedronGeometry(0.16, 3);
-const ringGeo = new THREE.TorusGeometry(0.5, 0.006, 8, 96);
-
 function Beacon({ station, trackIndex, texture }: { station: Station; trackIndex: number; texture: string | null }) {
   const group = useRef<THREE.Group>(null);
-  const rings = useRef<THREE.Group>(null);
   const act = useRef(0);
   const map = useLazyTexture(texture);
 
@@ -140,8 +136,6 @@ function Beacon({ station, trackIndex, texture }: { station: Station; trackIndex
   );
   const aspect = map?.image ? (map.image as HTMLImageElement).width / (map.image as HTMLImageElement).height : 0.8;
 
-  const coreMat = useMemo(() => new THREE.MeshBasicMaterial({ color: palette.signalHi, toneMapped: false }), []);
-  const ringMat = useMemo(() => new THREE.MeshBasicMaterial({ color: palette.paper, transparent: true, opacity: 0.4, toneMapped: false }), []);
 
   useFrame((state, dt) => {
     const near = isNear(trackIndex, 1.7);
@@ -153,26 +147,11 @@ function Beacon({ station, trackIndex, texture }: { station: Station; trackIndex
     photoMat.uniforms.uHasMap.value = map ? 1 : 0;
     photoMat.uniforms.uReveal.value = act.current;
     photoMat.uniforms.uTime.value = t;
-    if (rings.current) {
-      rings.current.children.forEach((r, i) => {
-        r.rotation.x = t * (0.3 + i * 0.2) + i;
-        r.rotation.y = t * (0.2 - i * 0.1);
-        r.scale.setScalar(1 + i * 0.45 + Math.sin(t * 1.2 + i) * 0.04);
-      });
-    }
-    // Over-bright (>1) so bloom picks the core up; pulses like a heartbeat
-    coreMat.color.set(palette.signalHi).multiplyScalar(1.4 + Math.sin(t * 2.4) * 0.3 + act.current);
   });
 
   const h = 2.0;
   return (
     <group ref={group} position={station.anchor}>
-      <mesh geometry={coreGeo} material={coreMat} position={[-station.side * 0.9, 1.25, -0.6]} />
-      <group ref={rings} position={[-station.side * 0.9, 1.25, -0.6]}>
-        {[0, 1, 2].map((i) => (
-          <mesh key={i} geometry={ringGeo} material={ringMat} />
-        ))}
-      </group>
       <mesh material={photoMat} position={[station.side * 0.2, 0, 0]} rotation={[0, -station.side * 0.22, station.side * 0.03]}>
         <planeGeometry args={[h * aspect, h]} />
       </mesh>

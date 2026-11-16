@@ -4,16 +4,18 @@
  * OFF by default. Nothing (not even an AudioContext) is created until the
  * visitor turns sound on, which is always a user gesture.
  *
- *   ambient bed   three detuned voices through a lowpass; each section
- *                 retunes the chord and filter (crossfaded, never cut)
- *   flight wind   band-passed noise whose level follows scroll speed
+ *   ambient pad   soft sine voices in the mid/high register with slow
+ *                 vibrato and a feedback-delay "room" — airy, never a
+ *                 drone (no sub-bass, no saw/triangle rumble). Each
+ *                 section gently retunes the chord.
+ *   air           a faint high hiss that rises with scroll speed
  *   ui sounds     distinct per element type — hovering a button, leaving
- *                 the site, entering a world and typing all sound different
+ *                 the site, opening a project and typing all sound different
  *
  * To use recorded assets instead, see README → "Customizing → Audio".
  */
 
-type SectionKey = "top" | "origin" | "toolbox" | "worlds" | "signals" | "launch";
+type SectionKey = "top" | "origin" | "toolbox" | "work" | "signals" | "launch";
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -21,23 +23,22 @@ let enabled = false;
 
 // Ambient graph
 let voices: OscillatorNode[] = [];
-let bedFilter: BiquadFilterNode | null = null;
-let bedGain: GainNode | null = null;
-let windGain: GainNode | null = null;
-let windFilter: BiquadFilterNode | null = null;
+let padGain: GainNode | null = null;
+let airGain: GainNode | null = null;
 let noiseBuf: AudioBuffer | null = null;
 
-/** Chords as semitone offsets from A1 (55Hz), plus filter cutoff */
-const SECTION_TONES: Record<SectionKey, { notes: [number, number, number]; cutoff: number }> = {
-  top: { notes: [0, 7, 15], cutoff: 520 }, // A  E  C — open, suspended
-  origin: { notes: [-4, 3, 12], cutoff: 680 }, // F  C  F — warm
-  toolbox: { notes: [2, 9, 17], cutoff: 900 }, // B  F# D — brighter
-  worlds: { notes: [-5, 2, 10], cutoff: 460 }, // E  B  G — deep
-  signals: { notes: [3, 10, 19], cutoff: 1100 }, // C  G  E — airy
-  launch: { notes: [5, 12, 21], cutoff: 1400 }, // D  A  F# — lift
+/** Chords as semitone offsets from A3 (220Hz) — open voicings, no thirds
+ *  in the bass, so they float rather than hum */
+const SECTION_TONES: Record<SectionKey, [number, number, number, number]> = {
+  top: [0, 7, 14, 19], // A E B E — open fifths
+  origin: [-4, 3, 10, 15], // F C G C
+  toolbox: [2, 9, 14, 21], // B F# B F#
+  work: [-2, 5, 12, 17], // G D A D
+  signals: [3, 10, 17, 22], // C G D G
+  launch: [5, 12, 19, 24], // D A E A
 };
 
-const hz = (semi: number) => 55 * Math.pow(2, semi / 12);
+const hz = (semi: number) => 220 * Math.pow(2, semi / 12);
 
 function ensure(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -46,8 +47,8 @@ function ensure(): AudioContext | null {
     if (!AC) return null;
     ctx = new AC();
     const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -18;
-    comp.ratio.value = 4;
+    comp.threshold.value = -20;
+    comp.ratio.value = 3;
     master = ctx.createGain();
     master.gain.value = 0;
     master.connect(comp).connect(ctx.destination);
@@ -62,46 +63,60 @@ function ensure(): AudioContext | null {
 
 function startBed() {
   const c = ctx!;
-  bedFilter = c.createBiquadFilter();
-  bedFilter.type = "lowpass";
-  bedFilter.frequency.value = 500;
-  bedFilter.Q.value = 0.7;
-  bedGain = c.createGain();
-  bedGain.gain.value = 0.0001;
-  bedFilter.connect(bedGain).connect(master!);
+  // Gentle "room": a filtered feedback delay the pad sends into
+  const tone = c.createBiquadFilter();
+  tone.type = "lowpass";
+  tone.frequency.value = 2400;
+  const delay = c.createDelay(1);
+  delay.delayTime.value = 0.38;
+  const feedback = c.createGain();
+  feedback.gain.value = 0.42;
+  const wet = c.createGain();
+  wet.gain.value = 0.5;
+  delay.connect(tone).connect(feedback).connect(delay);
+  tone.connect(wet).connect(master!);
 
-  // Slow LFO breathes the filter
-  const lfo = c.createOscillator();
-  const lfoAmt = c.createGain();
-  lfo.frequency.value = 0.07;
-  lfoAmt.gain.value = 140;
-  lfo.connect(lfoAmt).connect(bedFilter.frequency);
-  lfo.start();
+  padGain = c.createGain();
+  padGain.gain.value = 0.0001;
+  padGain.connect(master!);
+  padGain.connect(delay);
 
-  voices = SECTION_TONES.top.notes.map((n, i) => {
+  voices = SECTION_TONES.top.map((n, i) => {
     const o = c.createOscillator();
-    o.type = i === 0 ? "sine" : "triangle";
+    o.type = "sine";
     o.frequency.value = hz(n);
-    o.detune.value = (i - 1) * 7;
+    // Slow, slightly different vibrato per voice → a shimmering chorus
+    const vib = c.createOscillator();
+    const vibAmt = c.createGain();
+    vib.frequency.value = 0.11 + i * 0.07;
+    vibAmt.gain.value = 3 + i;
+    vib.connect(vibAmt).connect(o.detune);
+    vib.start();
+    // Each voice swells in and out on its own slow cycle
     const g = c.createGain();
-    g.gain.value = i === 0 ? 0.5 : 0.22;
-    o.connect(g).connect(bedFilter!);
+    g.gain.value = [0.32, 0.22, 0.14, 0.08][i];
+    const trem = c.createOscillator();
+    const tremAmt = c.createGain();
+    trem.frequency.value = 0.05 + i * 0.031;
+    tremAmt.gain.value = g.gain.value * 0.6;
+    trem.connect(tremAmt).connect(g.gain);
+    trem.start();
+    o.connect(g).connect(padGain!);
     o.start();
     return o;
   });
-  bedGain.gain.setTargetAtTime(0.11, c.currentTime, 1.5);
+  padGain.gain.setTargetAtTime(0.045, c.currentTime, 2);
 
-  // Flight wind
+  // Air: high, quiet hiss — like wind at altitude, not an engine
   const src = c.createBufferSource();
   src.buffer = noiseBuf;
   src.loop = true;
-  windFilter = c.createBiquadFilter();
-  windFilter.type = "bandpass";
-  windFilter.frequency.value = 600;
-  windFilter.Q.value = 0.9;
-  windGain = c.createGain();
-  windGain.gain.value = 0;
-  src.connect(windFilter).connect(windGain).connect(master!);
+  const hp = c.createBiquadFilter();
+  hp.type = "highpass";
+  hp.frequency.value = 3200;
+  airGain = c.createGain();
+  airGain.gain.value = 0;
+  src.connect(hp).connect(airGain).connect(master!);
   src.start();
 }
 
@@ -124,22 +139,20 @@ export const audio = {
     master.gain.setTargetAtTime(0, ctx.currentTime, 0.15);
   },
 
-  /** Crossfade the ambient bed to a section's chord */
-  setSection(id: SectionKey, worldIndex = -1) {
-    if (!enabled || !ctx || !bedFilter) return;
-    const tone = SECTION_TONES[id];
-    // Each world shifts the bed by a scale step so worlds feel distinct
-    const shift = worldIndex >= 0 ? [0, 2, 3, 5, 7, 8, 10][worldIndex % 7] : 0;
-    voices.forEach((o, i) => o.frequency.setTargetAtTime(hz(tone.notes[i] + shift), ctx!.currentTime, 0.9));
-    bedFilter.frequency.setTargetAtTime(tone.cutoff, ctx.currentTime, 1.2);
+  /** Glide the pad to a section's chord */
+  setSection(id: SectionKey, projectIndex = -1) {
+    if (!enabled || !ctx) return;
+    const notes = SECTION_TONES[id];
+    // Each project shifts the chord by a scale step so they feel distinct
+    const shift = projectIndex >= 0 ? [0, 2, -3, 5, -1, 3, 7][projectIndex % 7] : 0;
+    voices.forEach((o, i) => o.frequency.setTargetAtTime(hz(notes[i] + shift), ctx!.currentTime, 1.4));
   },
 
-  /** Scroll speed → wind level/brightness. Call per frame-ish. */
+  /** Scroll speed → a faint rush of air. Call ~10×/s. */
   setVelocity(v: number) {
-    if (!enabled || !ctx || !windGain || !windFilter) return;
-    const s = Math.min(1, Math.abs(v) / 50);
-    windGain.gain.setTargetAtTime(s * 0.09, ctx.currentTime, 0.12);
-    windFilter.frequency.setTargetAtTime(400 + s * 1800, ctx.currentTime, 0.12);
+    if (!enabled || !ctx || !airGain) return;
+    const s = Math.min(1, Math.abs(v) / 60);
+    airGain.gain.setTargetAtTime(s * s * 0.018, ctx.currentTime, 0.2);
   },
 };
 
@@ -195,7 +208,7 @@ const jitter = (f: number, amt = 0.04) => f * (1 + (Math.random() * 2 - 1) * amt
 export const sfx = {
   /** Hover: primary buttons — a soft glassy tick */
   hover: () => tone(jitter(1760, 0.02), { dur: 0.05, gain: 0.018, type: "sine" }),
-  /** Hover: project worlds — a short scanner chirp */
+  /** Hover: project images — a short scanner chirp */
   scan: () => tone(900, { dur: 0.09, gain: 0.02, slide: 1600, type: "triangle" }),
   /** Hover: inline items like skills — a muted wood tap */
   tap: () => noise({ dur: 0.03, gain: 0.03, freq: jitter(1400, 0.15), q: 6 }),
@@ -204,13 +217,14 @@ export const sfx = {
     tone(660, { dur: 0.08, gain: 0.03 });
     tone(990, { dur: 0.12, gain: 0.03, delay: 0.06 });
   },
-  /** Entering a world — falling whoosh + low thump */
+  /** Opening a project — falling air + two soft notes */
   enter: () => {
-    noise({ dur: 0.7, gain: 0.07, freq: 3000, sweepTo: 200, q: 0.8 });
-    tone(110, { dur: 0.6, gain: 0.09, slide: 55, delay: 0.45, attack: 0.02 });
+    noise({ dur: 0.6, gain: 0.04, freq: 5200, sweepTo: 1400, q: 1.2 });
+    tone(660, { dur: 0.5, gain: 0.025, delay: 0.32, attack: 0.03 });
+    tone(990, { dur: 0.6, gain: 0.018, delay: 0.38, attack: 0.03 });
   },
-  /** Leaving a world — rising whoosh */
-  back: () => noise({ dur: 0.55, gain: 0.06, freq: 250, sweepTo: 2600, q: 0.8 }),
+  /** Leaving a project — rising air */
+  back: () => noise({ dur: 0.45, gain: 0.035, freq: 1400, sweepTo: 5200, q: 1.2 }),
   toggle: () => {
     tone(1200, { dur: 0.03, gain: 0.03, type: "square" });
     tone(1600, { dur: 0.03, gain: 0.025, type: "square", delay: 0.04 });
@@ -227,16 +241,16 @@ export const sfx = {
   ding: () => {
     [880, 1318, 1760].forEach((f, i) => tone(f, { dur: 1.2, gain: 0.035 / (i + 1), delay: i * 0.01 }));
   },
-  buzz: () => tone(130, { type: "sawtooth", dur: 0.2, gain: 0.04 }),
-  /** Loader exit */
-  ignite: () => {
-    noise({ dur: 1.4, gain: 0.05, freq: 120, sweepTo: 900, q: 0.6, type: "lowpass" });
-    tone(55, { dur: 1.4, gain: 0.08, slide: 82, attack: 0.3 });
+  buzz: () => {
+    tone(330, { type: "triangle", dur: 0.12, gain: 0.03 });
+    tone(311, { type: "triangle", dur: 0.16, gain: 0.025, delay: 0.1 });
   },
-  /** Contact form launch */
+  /** Loader exit */
+  ignite: () => [440, 660, 880, 1320].forEach((f, i) => tone(f, { dur: 1.1, gain: 0.02, delay: i * 0.07, attack: 0.04 })),
+  /** Contact form launch — a rising rush of air and a bright chord */
   launch: () => {
-    noise({ dur: 2.6, gain: 0.09, freq: 90, sweepTo: 1800, q: 0.5, type: "lowpass" });
-    tone(41, { dur: 2.4, gain: 0.12, slide: 98, attack: 0.15 });
+    noise({ dur: 2.2, gain: 0.035, freq: 2000, sweepTo: 7000, q: 0.8 });
+    [523, 784, 1046].forEach((f, i) => tone(f, { dur: 1.4, gain: 0.02, delay: 0.2 + i * 0.12, attack: 0.05 }));
   },
   /** Easter eggs */
   unlock: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, { dur: 0.25, gain: 0.04, delay: i * 0.09, type: "triangle" })),

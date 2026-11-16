@@ -13,7 +13,6 @@ import CameraRig from "./CameraRig";
 import Starfield from "./Starfield";
 import HeroField from "./hero/HeroField";
 import Post from "./Post";
-import Worlds from "./worlds/Worlds";
 import Landmarks from "./landmarks/Landmarks";
 import FpsProbe from "./FpsProbe";
 import CursorLight from "./CursorLight";
@@ -90,7 +89,6 @@ function Scene() {
       <HeroField />
       <Suspense fallback={null}>
         <Landmarks stations={stations} skills={skills} />
-        <Worlds stations={stations} projects={projects} />
       </Suspense>
       <Post />
       <FirstFrame />

@@ -111,12 +111,12 @@ void main() {
 }`;
 
 /**
- * Launch — the contact form's pre-flight. Gantry lamps follow form
- * completion; scrolling past the form into the footer counts down,
- * ignites and flies the rocket (scrubbed — scroll back to reverse it).
- * A successful send plays the full launch automatically.
+ * Launch — background of the contact section. Gantry lamps follow form
+ * completion; scrolling the last stretch to the bottom of the page counts
+ * down, ignites and flies the rocket out of frame (scrubbed — scroll back
+ * to reverse it). A successful send plays the full launch automatically.
  */
-export default function LaunchPad({ station, trackIndex, liftIndex }: { station: Station; trackIndex: number; liftIndex: number }) {
+export default function LaunchPad({ station, trackIndex }: { station: Station; trackIndex: number }) {
   const group = useRef<THREE.Group>(null);
   const rocket = useRef<THREE.Group>(null);
   const boosters = useRef<THREE.Group[]>([]);
@@ -248,7 +248,7 @@ export default function LaunchPad({ station, trackIndex, liftIndex }: { station:
   const boosterDrift = useMemo(() => [new THREE.Vector3(-1, -0.4, 0.3), new THREE.Vector3(1, -0.5, -0.2)], []);
 
   useFrame((state, dt) => {
-    const near = isNear(trackIndex, 1.6) || isNear(liftIndex, 1.6);
+    const near = isNear(trackIndex, 1.6);
     if (group.current) group.current.visible = near;
     if (!near) {
       flight.rocketAlt = 0;
@@ -257,8 +257,9 @@ export default function LaunchPad({ station, trackIndex, liftIndex }: { station:
     }
     const t = state.clock.elapsedTime;
 
-    // Progress: scroll from the launch station to the liftoff station…
-    const scrollP = THREE.MathUtils.clamp((flight.t - trackIndex) / Math.max(0.001, liftIndex - trackIndex), 0, 1);
+    // Progress: the last bit of scroll, from the contact form to the very
+    // bottom of the page…
+    const scrollP = flight.tail;
     // …or the automatic sequence after a successful send
     const since = flight.launchAt > 0 ? performance.now() / 1000 - flight.launchAt : -1;
     const autoP = since < 0 ? 0 : since < AUTO_LAUNCH_SECONDS + 4 ? Math.min(1, since / AUTO_LAUNCH_SECONDS) : 0;

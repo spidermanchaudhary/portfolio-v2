@@ -1,26 +1,24 @@
-import type { Project, WorldKind, Metric } from "./types";
+import type { Project, Metric } from "./types";
 import { projectsSnapshot, type ApiProject } from "./projects.snapshot";
 
 /**
- * Per-project world configuration, keyed by the API `_id`.
+ * Per-project configuration, keyed by the API `_id`.
  *
  * Everything here is derived from the project's own description — metrics,
  * stack and user counts are quoted, never estimated. Projects without a
- * reported user count render at base size with no impact glow.
+ * reported number simply show no metrics.
  *
- * `order` sets the flight path through the universe.
+ * `order` sets the display order.
  */
-interface WorldConfig {
+interface ProjectConfig {
   order: number;
   tagline: string;
   stack: string[];
   metrics: Metric[];
   users: number | null;
-  kind: WorldKind;
-  caption: string;
 }
 
-const WORLDS: Record<string, WorldConfig> = {
+const CONFIG: Record<string, ProjectConfig> = {
   "68f871ea910907fc9fd765ee": {
     order: 0,
     tagline: "Attendance automation for NSUT — from 3–5 minutes down to 1–2 seconds.",
@@ -32,9 +30,6 @@ const WORLDS: Record<string, WorldConfig> = {
       { value: "40%", label: "of NSUT students" },
     ],
     users: 4000,
-    kind: "ocr-scan",
-    caption:
-      "An attendance sheet floats in space. A scanning beam sweeps across it, decodes the CAPTCHA strip, and ticks light up row by row.",
   },
   "6856addebcdbacf66e86be73": {
     order: 1,
@@ -42,9 +37,6 @@ const WORLDS: Record<string, WorldConfig> = {
     stack: [],
     metrics: [{ value: "400,000+", label: "students" }],
     users: 400000,
-    kind: "ranking-wall",
-    caption:
-      "A drifting wall of college cards. As you approach, they sort and rank themselves into ordered columns, with the best match lifting out.",
   },
   "6856addebcdbacf66e86be7a": {
     order: 2,
@@ -52,9 +44,6 @@ const WORLDS: Record<string, WorldConfig> = {
     stack: ["MongoDB", "Express.js", "React", "Node.js", "Socket.IO", "FCM", "Mailgun", "AWS S3"],
     metrics: [],
     users: null,
-    kind: "cipher-pairs",
-    caption:
-      "Two walls of anonymous students face each other. Encrypted beams link pairs across the gap — plaintext at each end, ciphertext in transit.",
   },
   "6856addebcdbacf66e86be79": {
     order: 3,
@@ -62,9 +51,6 @@ const WORLDS: Record<string, WorldConfig> = {
     stack: ["MongoDB", "Express.js", "React", "Node.js", "Socket.IO", "JWT"],
     metrics: [],
     users: null,
-    kind: "feedback-swarm",
-    caption:
-      "A profile with one shareable link. Anonymous notes fly in from every direction in real time and stack into its inbox.",
   },
   "6856addebcdbacf66e86be74": {
     order: 4,
@@ -72,9 +58,6 @@ const WORLDS: Record<string, WorldConfig> = {
     stack: [],
     metrics: [],
     users: null,
-    kind: "vault",
-    caption:
-      "Loose files orbit a vault. As you approach, they sort by type into stacks — one open public shelf, one sealed private shelf.",
   },
   "6856addebcdbacf66e86be72": {
     order: 5,
@@ -82,9 +65,6 @@ const WORLDS: Record<string, WorldConfig> = {
     stack: ["HTML", "CSS", "JavaScript", "PHP"],
     metrics: [{ value: "1,000+", label: "students helped" }],
     users: 1000,
-    kind: "roll-search",
-    caption:
-      "A floor of roll-number tiles. A query is typed, a search beam sweeps the rows, and the one matching tile rises out.",
   },
   "6856addebcdbacf66e86be78": {
     order: 6,
@@ -92,8 +72,6 @@ const WORLDS: Record<string, WorldConfig> = {
     stack: ["HTML", "CSS", "JavaScript", "PHP"],
     metrics: [],
     users: null,
-    kind: "rolodex",
-    caption: "A rolodex with A–Z index tabs spins, slows, and settles on one student record.",
   },
 };
 
@@ -104,11 +82,11 @@ export function slugify(name: string) {
     .replace(/^-|-$/g, "");
 }
 
-/** Merge raw API rows with world configuration and sort into flight order. */
+/** Merge raw API rows with per-project configuration and sort. */
 export function toProjects(rows: ApiProject[]): Project[] {
   return rows
     .map((row, i) => {
-      const cfg = WORLDS[row._id];
+      const cfg = CONFIG[row._id];
       const project: Project = {
         id: row._id,
         slug: slugify(row.name),
@@ -121,10 +99,6 @@ export function toProjects(rows: ApiProject[]): Project[] {
         stack: cfg?.stack ?? [],
         metrics: cfg?.metrics ?? [],
         users: cfg?.users ?? null,
-        world: {
-          kind: cfg?.kind ?? "planet",
-          caption: cfg?.caption ?? `A world for ${row.name}.`,
-        },
       };
       return { project, order: cfg?.order ?? 100 + i };
     })
@@ -133,13 +107,3 @@ export function toProjects(rows: ApiProject[]): Project[] {
 }
 
 export const projectsFallback = toProjects(projectsSnapshot);
-
-/**
- * Planet radius multiplier from reported users. Logarithmic, so 400k users
- * reads as clearly larger than 4k without swallowing the scene.
- * null (not reported) → 1.
- */
-export function impactScale(users: number | null) {
-  if (!users) return 1;
-  return 1 + 0.36 * Math.log10(users / 1000 + 1);
-}

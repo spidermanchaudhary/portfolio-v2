@@ -33,8 +33,8 @@ interface UniverseState {
   terminalOpen: boolean;
 
   activeSection: SectionId;
-  /** Index into projects of the world currently in view, -1 if none */
-  activeWorld: number;
+  /** Index of the project chapter currently in view, -1 if none */
+  activeProject: number;
   /** Project slug the camera is flying into / parked at (/work/[slug]) */
   focusSlug: string | null;
 
@@ -57,7 +57,7 @@ export const useUniverse = create<UniverseState>((set) => ({
   paletteOpen: false,
   terminalOpen: false,
   activeSection: "top",
-  activeWorld: -1,
+  activeProject: -1,
   focusSlug: null,
   cursor: { mode: "default", label: null },
   set: (partial) => set(partial),
@@ -74,6 +74,8 @@ export const flight = {
   velocity: 0,
   /** Overall page progress 0..1 */
   progress: 0,
+  /** 0..1 progress from the last station's centre to the bottom of the page */
+  tail: 0,
   /** Camera speed along the track, world units/sec (signed, + = forward) */
   speed: 0,
   /** Smoothed camera velocity vector, world units/sec */

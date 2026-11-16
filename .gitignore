@@ -42,3 +42,4 @@ next-env.d.ts
 
 # isolated QA builds
 /.next-qa/
+/.next-*/

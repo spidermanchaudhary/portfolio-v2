@@ -3,10 +3,10 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getProjects } from "@/data/load";
 import { site } from "@/data/site";
-import { hostOf } from "@/components/sections/Worlds";
-import WorldLink from "@/components/ui/WorldLink";
+import { hostOf } from "@/components/sections/Work";
+import ProjectLink from "@/components/ui/ProjectLink";
 import BackToUniverse from "@/components/ui/BackToUniverse";
-import FocusWorld from "@/components/ui/FocusWorld";
+import FocusProject from "@/components/ui/FocusProject";
 
 export const revalidate = 3600;
 
@@ -61,7 +61,7 @@ export default async function WorkPage({ params }: Params) {
   return (
     <article aria-labelledby="dossier-title" className="relative min-h-[100svh] px-5 pb-28 pt-24 sm:px-8 lg:px-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <FocusWorld slug={project.slug} />
+      <FocusProject slug={project.slug} />
 
       <BackToUniverse slug={project.slug} />
 
@@ -69,7 +69,7 @@ export default async function WorkPage({ params }: Params) {
         <header className="col-span-12 lg:col-span-6">
           <p className="label mb-5 flex items-center gap-3" data-reveal>
             <span aria-hidden className="inline-block h-2 w-2 rotate-45 border border-signal-hi" />
-            World {index + 1} of {projects.length}
+            Project {index + 1} of {projects.length}
             {host && <span className="text-faint">· {host}</span>}
           </p>
           <h1 id="dossier-title" className="font-display text-d-1 font-extrabold uppercase wdth-cond" data-split>
@@ -78,9 +78,28 @@ export default async function WorkPage({ params }: Params) {
           <p className="mt-6 max-w-lg text-xl leading-snug text-paper/85 text-pretty" data-reveal>
             {project.tagline}
           </p>
+          <figure className="mt-12 border border-line bg-void/80 backdrop-blur" data-reveal>
+            <figcaption className="flex items-center gap-3 border-b border-line px-4 py-2.5">
+              <span aria-hidden className="flex gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-line" />
+                <span className="h-2 w-2 rounded-full bg-line" />
+                <span className="h-2 w-2 rounded-full bg-signal-hi" />
+              </span>
+              <span className="truncate font-mono text-[11px] text-dust">{host || project.slug}</span>
+            </figcaption>
+            <Image
+              src={project.thumbnail}
+              alt={`${project.name} screenshot`}
+              width={1280}
+              height={720}
+              sizes="(min-width: 1024px) 48vw, 92vw"
+              priority
+              className="aspect-video w-full object-cover object-top"
+            />
+          </figure>
         </header>
 
-        <div className="col-span-12 space-y-10 lg:col-span-5 lg:col-start-8 lg:pt-24">
+        <div className="col-span-12 space-y-10 lg:col-span-5 lg:col-start-8 lg:pt-40">
           {project.metrics.length > 0 && (
             <dl className="grid grid-cols-2 gap-px border border-line bg-line" data-reveal>
               {project.metrics.map((m, mi) => (
@@ -146,36 +165,17 @@ export default async function WorkPage({ params }: Params) {
             )}
           </div>
 
-          <figure className="ticks border border-line bg-void/70 p-2 backdrop-blur" data-tilt data-cursor="scan" data-reveal>
-            <Image
-              src={project.thumbnail}
-              alt={`${project.name} screenshot`}
-              width={1280}
-              height={720}
-              sizes="(min-width: 1024px) 40vw, 92vw"
-              priority
-              className="aspect-video w-full object-cover object-top"
-            />
-            <figcaption className="flex justify-between px-1 pt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
-              <span>transmission · {project.slug}</span>
-              <span>{host}</span>
-            </figcaption>
-          </figure>
-
-          <p className="border-l border-signal/60 bg-void/70 py-2 pl-4 pr-3 font-mono text-[0.72rem] leading-5 text-dust backdrop-blur-sm">
-            <span className="text-signal-hi">in view —</span> {project.world.caption}
-          </p>
         </div>
       </div>
 
-      <nav aria-label="Next world" className="mt-24 border-t border-line pt-8">
-        <p className="label mb-3">Next world</p>
-        <WorldLink slug={next.slug} className="group inline-flex items-baseline gap-4 font-display text-d-3 font-bold">
+      <nav aria-label="Next project" className="mt-24 border-t border-line pt-8">
+        <p className="label mb-3">Next project</p>
+        <ProjectLink slug={next.slug} className="group inline-flex items-baseline gap-4 font-display text-d-3 font-bold">
           {next.name}
           <span aria-hidden className="text-signal-hi transition-transform duration-500 ease-out-expo group-hover:translate-x-2">
             →
           </span>
-        </WorldLink>
+        </ProjectLink>
       </nav>
     </article>
   );

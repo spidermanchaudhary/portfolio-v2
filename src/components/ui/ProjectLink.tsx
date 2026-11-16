@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { useUniverse } from "@/store/universe";
 
 /**
- * Link into a project world. With WebGL on, it first flies the camera into
- * the planet, then swaps the route underneath — the canvas persists in the
+ * Link to a project page. With WebGL on, the HTML dissolves and the camera
+ * eases forward first, then the route swaps underneath — the canvas persists in the
  * layout, so there is never a hard cut. Without WebGL (or with reduced
  * motion) it's a plain link.
  */
-export default function WorldLink({
+export default function ProjectLink({
   slug,
   className,
   children,

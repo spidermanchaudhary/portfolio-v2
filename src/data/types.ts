@@ -1,6 +1,6 @@
 /**
  * Shared content types. Every scene in the canvas and every semantic HTML
- * section reads from the same typed objects, so the 3D world and the
+ * section reads from the same typed objects, so the 3D scene and the
  * accessible document can never drift apart.
  */
 
@@ -8,7 +8,7 @@ export type SectionId =
   | "top"
   | "origin"
   | "toolbox"
-  | "worlds"
+  | "work"
   | "signals"
   | "launch";
 
@@ -51,21 +51,6 @@ export interface Skill {
   image: string;
 }
 
-/**
- * Each project world gets a bespoke mini-scene. `planet` is the generic
- * fallback used for projects that appear in the API but have no bespoke
- * scene yet.
- */
-export type WorldKind =
-  | "ocr-scan" // Hajiri — attendance sheet read by a scanning beam
-  | "ranking-wall" // JEE College Predictor — cards that rank themselves
-  | "cipher-pairs" // BlindBook — two crowds matched by encrypted beams
-  | "feedback-swarm" // WTF — anonymous notes streaming into one profile
-  | "vault" // Sdrive — files sorting into public/private stacks
-  | "roll-search" // NSUT Rollno Search — a field of roll numbers, one lights up
-  | "rolodex" // NSUT Students Directory — a spinning card index
-  | "planet";
-
 export interface Metric {
   value: string;
   label: string;
@@ -86,13 +71,8 @@ export interface Project {
   stack: string[];
   /** Metrics exactly as stated in the description */
   metrics: Metric[];
-  /** Reported user count; drives planet size and glow. null = not reported */
+  /** Reported user count, quoted from the description. null = not reported */
   users: number | null;
-  world: {
-    kind: WorldKind;
-    /** What the mini-scene is showing, for screen readers and captions */
-    caption: string;
-  };
 }
 
 export interface Review {

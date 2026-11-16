@@ -47,7 +47,7 @@ export default function Hero() {
           </p>
           <div className="flex flex-wrap items-center gap-3 lg:justify-end" data-reveal>
             <Link
-              href="#worlds"
+              href="#work"
               data-cursor="button"
               data-magnetic
               data-sfx="launch"

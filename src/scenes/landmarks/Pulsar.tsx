@@ -32,13 +32,11 @@ void main() {
 }`;
 
 /**
- * Signals — a pulsar. Two lighthouse beams sweep the dark, and one
- * shockwave ring goes out per transmission received.
+ * Signals — a pulsar. Two lighthouse beams sweep the dark.
  */
-export default function Pulsar({ station, trackIndex, count }: { station: Station; trackIndex: number; count: number }) {
+export default function Pulsar({ station, trackIndex }: { station: Station; trackIndex: number }) {
   const group = useRef<THREE.Group>(null);
   const spinner = useRef<THREE.Group>(null);
-  const ringsRef = useRef<THREE.Group>(null);
   const act = useRef(0);
 
   const beamGeo = useMemo(() => {
@@ -60,12 +58,6 @@ export default function Pulsar({ station, trackIndex, count }: { station: Statio
     []
   );
   const coreMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color(palette.paper).multiplyScalar(2.2), toneMapped: false }), []);
-  const ringGeo = useMemo(() => new THREE.RingGeometry(0.98, 1, 128), []);
-  const ringMats = useMemo(
-    () =>
-      Array.from({ length: count }, () => new THREE.MeshBasicMaterial({ color: palette.signalHi, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })),
-    [count]
-  );
 
   useFrame((state, dt) => {
     const near = isNear(trackIndex, 2);
@@ -75,12 +67,6 @@ export default function Pulsar({ station, trackIndex, count }: { station: Statio
     const t = state.clock.elapsedTime;
     if (spinner.current) spinner.current.rotation.z = t * 1.6;
     beamMat.uniforms.uIntensity.value = 0.25 + act.current * 0.55;
-    ringsRef.current?.children.forEach((r, i) => {
-      // Staggered, each ring = one note received
-      const p = (t * 0.22 + i / count) % 1;
-      r.scale.setScalar(0.4 + p * 9);
-      ringMats[i].opacity = (1 - p) * (1 - p) * 0.55 * (0.3 + act.current * 0.7);
-    });
   });
 
   return (
@@ -94,11 +80,6 @@ export default function Pulsar({ station, trackIndex, count }: { station: Statio
           <mesh geometry={beamGeo} material={beamMat} rotation={[0, 0, Math.PI / 2]} position={[0, 0, 0]} />
           <mesh geometry={beamGeo} material={beamMat} rotation={[0, 0, -Math.PI / 2]} />
         </group>
-      </group>
-      <group ref={ringsRef} rotation={[-1.1, 0, 0.2]}>
-        {ringMats.map((mat, i) => (
-          <mesh key={i} geometry={ringGeo} material={mat} />
-        ))}
       </group>
     </group>
   );

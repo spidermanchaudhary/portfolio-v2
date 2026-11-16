@@ -1,7 +1,7 @@
 import Hero from "@/components/sections/Hero";
 import Origin from "@/components/sections/Origin";
 import Toolbox from "@/components/sections/Toolbox";
-import Worlds from "@/components/sections/Worlds";
+import Work from "@/components/sections/Work";
 import Signals from "@/components/sections/Signals";
 import Launch from "@/components/sections/Launch";
 import Colophon from "@/components/sections/Colophon";
@@ -70,7 +70,7 @@ export default async function Home() {
       <Hero />
       <Origin />
       <Toolbox skills={skills} />
-      <Worlds projects={projects} />
+      <Work projects={projects} />
       <Signals reviews={reviews} />
       <Launch />
       <Colophon />

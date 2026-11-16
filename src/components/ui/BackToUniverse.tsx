@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { useUniverse } from "@/store/universe";
 
 /**
- * Leave a world: release camera focus (it eases back out along the track),
- * then return to the home page at this world's chapter.
+ * Leave a project: release camera focus (it eases back onto the track),
+ * then return to the home page at this project's chapter.
  */
 export default function BackToUniverse({ slug }: { slug: string }) {
   const router = useRouter();
-  const href = `/#world-${slug}`;
+  const href = `/#project-${slug}`;
   return (
     <Link
       href={href}
