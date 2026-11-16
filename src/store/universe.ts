@@ -72,8 +72,6 @@ export const flight = {
   velocity: 0,
   /** Overall page progress 0..1 */
   progress: 0,
-  /** 0..1 progress from the last station's centre to the bottom of the page */
-  tail: 0,
   /** Camera speed along the track, world units/sec (signed, + = forward) */
   speed: 0,
   /** Smoothed camera velocity vector, world units/sec */

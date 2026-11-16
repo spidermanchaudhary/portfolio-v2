@@ -92,11 +92,6 @@ export default function FlightDriver() {
         }
         flight.t = t;
 
-        // Past the last station (contact) → the remaining scroll to the very
-        // bottom of the page drives the background rocket launch
-        const lastStart = centers[centers.length - 1].y - window.innerHeight / 2;
-        flight.tail = max > lastStart ? Math.min(1, Math.max(0, (y - lastStart) / (max - lastStart))) : 0;
-
         const nearest = centers[Math.round(t)]?.key ?? "";
         const m = /^project-(\d+)$/.exec(nearest);
         const activeProject = m ? Number(m[1]) : -1;

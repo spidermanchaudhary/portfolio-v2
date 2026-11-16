@@ -6,14 +6,14 @@ import * as THREE from "three";
 import { palette } from "@/lib/palette";
 import { flight } from "@/store/universe";
 import type { Station } from "../track";
-import { isNear } from "../shared/activity";
+import { activity, isNear } from "../shared/activity";
 import { canvasTexture } from "../shared/canvasTexture";
 import Rocket from "./rocket/Rocket";
 
 const LAMPS = 5;
 const SMOKE = 70;
 /** Seconds the submit-triggered launch takes to reach the top */
-export const AUTO_LAUNCH_SECONDS = 7;
+export const AUTO_LAUNCH_SECONDS = 9;
 const TOWER_H = 3.9;
 
 /* Launch progress p (0..1):
@@ -111,10 +111,10 @@ void main() {
 }`;
 
 /**
- * Launch — background of the contact section. Gantry lamps follow form
- * completion; scrolling the last stretch to the bottom of the page counts
- * down, ignites and flies the rocket out of frame (scrubbed — scroll back
- * to reverse it). A successful send plays the full launch automatically.
+ * Launch — background of the contact section. When the section comes into
+ * view the rocket counts down, ignites and flies out of frame on its own.
+ * Leaving and returning resets it for another launch; a successful form
+ * send restarts the sequence too.
  */
 export default function LaunchPad({ station, trackIndex }: { station: Station; trackIndex: number }) {
   const group = useRef<THREE.Group>(null);
@@ -251,23 +251,26 @@ export default function LaunchPad({ station, trackIndex }: { station: Station; t
     const near = isNear(trackIndex, 1.6);
     if (group.current) group.current.visible = near;
     if (!near) {
+      // Out of view: quietly reset so a fresh rocket waits on the pad
+      flight.launchAt = -1;
       flight.rocketAlt = 0;
       flight.launchP = 0;
       return;
     }
     const t = state.clock.elapsedTime;
+    const now = performance.now() / 1000;
 
-    // Progress: the last bit of scroll, from the contact form to the very
-    // bottom of the page…
-    const scrollP = flight.tail;
-    // …or the automatic sequence after a successful send
-    const since = flight.launchAt > 0 ? performance.now() / 1000 - flight.launchAt : -1;
-    const autoP = since < 0 ? 0 : since < AUTO_LAUNCH_SECONDS + 4 ? Math.min(1, since / AUTO_LAUNCH_SECONDS) : 0;
-    const p = Math.max(scrollP, autoP);
+    // Launches by itself once the contact section is in view (a successful
+    // form send also restarts the sequence via flight.launchAt)
+    if (flight.launchAt < 0 && activity(trackIndex, 1) > 0.5) flight.launchAt = now + 0.6;
+    const since = flight.launchAt > 0 ? now - flight.launchAt : -1;
+    // Stays at 1 (gone) after the flight until the section leaves view
+    const p = since < 0 ? 0 : Math.min(1, since / AUTO_LAUNCH_SECONDS);
     flight.launchP = p;
 
     const alt = rocketAltitude(p);
-    flight.rocketAlt = alt;
+    // Camera glances up during the climb, then settles back once it is gone
+    flight.rocketAlt = p >= 1 ? 0 : alt;
     const ignition = THREE.MathUtils.smoothstep(p, IGNITE, LIFT);
     const countdown = p > 0.005 && p < IGNITE;
     const power = p >= IGNITE && p < 0.995 ? 0.35 + ignition * 0.65 : 0;
