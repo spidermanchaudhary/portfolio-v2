@@ -54,16 +54,17 @@ export default function BangShock() {
 
   useFrame(() => {
     const k = bangProgress();
-    const on = k > 0 && k < 0.7;
+    const on = k > 0 && k < 0.6;
     [fast.current, slowShell.current].forEach((m, i) => {
       if (!m) return;
       m.visible = on;
       if (!on) return;
       const speed = i === 0 ? 1 : 0.62;
-      const p = Math.min(1, (k / 0.7) * (1 / speed));
+      const p = Math.min(1, (k / 0.6) * (1 / speed));
       const e = 1 - Math.pow(1 - p, 3);
       m.scale.setScalar(0.2 + e * (i === 0 ? 34 : 22));
-      mats[i].uniforms.uFade.value = (1 - p) * (1 - p) * (i === 0 ? 1 : 0.8);
+      // Soft: one gentle white wave, the blue one barely there
+      mats[i].uniforms.uFade.value = (1 - p) * (1 - p) * (i === 0 ? 0.45 : 0.18);
     });
   });
 

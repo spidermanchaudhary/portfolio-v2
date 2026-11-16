@@ -7,7 +7,6 @@ import { KernelSize } from "postprocessing";
 import { FinishEffect } from "@/shaders/finishEffect";
 import { flight, useUniverse } from "@/store/universe";
 import { warpAmount } from "@/lib/warp";
-import { blastAmount } from "@/lib/bang";
 
 /**
  * Post-processing: mipmap bloom + one merged finish pass (velocity warp,
@@ -22,8 +21,7 @@ export default function Post() {
   useFrame((_, dt) => {
     const u = finish.uniforms;
     u.get("uTime")!.value += dt;
-    // Page-jump warp, or the Big Bang blast (radial blur + fringing)
-    u.get("uWarp")!.value = Math.max(warpAmount(), blastAmount() * 0.85);
+    u.get("uWarp")!.value = warpAmount();
     // Normalised velocity: ~1 at a hard flick of the wheel
     const v = Math.max(-1, Math.min(1, flight.velocity / 60));
     u.get("uVelocity")!.value += (v - u.get("uVelocity")!.value) * Math.min(1, dt * 8);
