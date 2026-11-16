@@ -104,7 +104,7 @@ export default function HeroField() {
     const k = bangProgress();
     u.uBangK.value = k;
     // Let the blast play out before the dust starts forming the name
-    if (booted && k > 0.62) st.assemble = Math.min(1, st.assemble + dt * 0.5);
+    if (booted && k > 0.3) st.assemble = Math.min(1, st.assemble + dt * 1.15);
     u.uAssemble.value = st.assemble;
 
     // Scroll: name → galaxy (top → galaxy station), then the galaxy

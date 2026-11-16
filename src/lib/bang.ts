@@ -1,7 +1,7 @@
 import { flight } from "@/store/universe";
 
 /** Seconds the whole Big Bang takes (detonation → settled dust) */
-export const BANG_SECONDS = 3.6;
+export const BANG_SECONDS = 1.5;
 
 /** Mark the moment of the bang (called when the intro hands off) */
 export function triggerBang() {
@@ -26,7 +26,7 @@ export function bangAmount(now = performance.now() / 1000) {
   const k = bangProgress(now);
   if (k >= 1) return flight.bootAt < 0 ? 0 : 1;
   const e = 1 - Math.pow(2, -14 * k);
-  return e + 0.8 * e * Math.pow(1 - k, 2.4);
+  return e + 0.35 * e * Math.pow(1 - k, 2.4);
 }
 
 /** Violence of the blast right now: 1 at detonation, fading to 0 */
