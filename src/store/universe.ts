@@ -21,6 +21,8 @@ interface UniverseState {
   reducedMotion: boolean;
   isTouch: boolean;
   quality: Quality;
+  /** Quality pinned via ?q= — adaptive monitor is ignored */
+  qualityLocked: boolean;
 
   soundOn: boolean;
   showFps: boolean;
@@ -48,6 +50,7 @@ export const useUniverse = create<UniverseState>((set) => ({
   reducedMotion: false,
   isTouch: false,
   quality: "high",
+  qualityLocked: false,
   soundOn: false,
   showFps: false,
   blueprint: false,
@@ -71,8 +74,11 @@ export const flight = {
   velocity: 0,
   /** Overall page progress 0..1 */
   progress: 0,
-  /** Pointer in normalized device coords (-1..1), smoothed in scenes */
-  pointer: { x: 0, y: 0 },
+  /** Camera speed along the track, world units/sec (signed, + = forward) */
+  speed: 0,
+  /** Pointer in normalized device coords (-1..1). Starts off-screen so the
+   *  hero name isn't carved open before the visitor moves the mouse. */
+  pointer: { x: 0, y: -3 },
   /** Device tilt from gyroscope (-1..1), 0 when unavailable */
   tilt: { x: 0, y: 0 },
   /** Contact form completion 0..1 — lights the gantry lamps */

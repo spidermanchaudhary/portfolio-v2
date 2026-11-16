@@ -16,7 +16,7 @@ export default function Hero() {
     >
       <p
         aria-hidden
-        className="hero-fallback-name pointer-events-none absolute inset-x-0 top-[22%] hidden select-none text-center font-display text-d-1 font-extrabold uppercase text-transparent wdth-cond [-webkit-text-stroke:1px_rgb(var(--paper)/0.35)]"
+        className="hero-fallback-name pointer-events-none absolute inset-x-0 top-[22%] select-none text-center font-display text-d-1 font-extrabold uppercase text-transparent wdth-cond [-webkit-text-stroke:1px_rgb(var(--paper)/0.35)]"
       >
         {site.firstName}
       </p>

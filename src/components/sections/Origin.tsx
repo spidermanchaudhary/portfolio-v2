@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export default function Origin() {
   return (
     <section id="origin" aria-labelledby="origin-title" className="relative">
-      <header className="flex min-h-[70vh] items-end px-5 pb-16 sm:px-8 lg:px-12">
+      <header data-station="galaxy" className="flex min-h-[110vh] items-center px-5 sm:px-8 lg:px-12">
         <div className="max-w-3xl">
           <p className="label mb-4" data-reveal>
             Origin · {origin.length} stops on the orbit

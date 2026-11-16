@@ -4,6 +4,7 @@ import "./globals.css";
 import { site } from "@/data/site";
 import { getProjects, getSkills } from "@/data/load";
 import Shell from "@/components/Shell";
+import { bootScript } from "@/lib/capabilities";
 
 const display = Bricolage_Grotesque({
   variable: "--font-display",
@@ -57,7 +58,11 @@ export default async function RootLayout({
   const [projects, skills] = await Promise.all([getProjects(), getSkills()]);
 
   return (
-    <html lang="en" className={`${display.variable} ${mono.variable}`}>
+    <html lang="en" className={`${display.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Classifies the device before first paint (lite / touch / rebooted) */}
+        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
+      </head>
       <body className="bg-void font-sans text-paper antialiased">
         <a
           href="#main"
