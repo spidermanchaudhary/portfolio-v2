@@ -28,7 +28,7 @@ void main() {
   float tw = 0.65 + 0.35 * sin(uTime * (0.6 + aSeed.x * 2.2) + aSeed.y * 40.0);
   gl_PointSize = (0.6 + aSeed.x * 1.9) * uPixelRatio * (34.0 / -mv.z);
   gl_PointSize = clamp(gl_PointSize, 0.0, 6.0 * uPixelRatio);
-  vAlpha = tw * smoothstep(240.0, 30.0, -mv.z) * smoothstep(0.0, 0.3, uBang);
+  vAlpha = tw * smoothstep(240.0, 30.0, -mv.z) * smoothstep(0.0, 0.15, uBang);
   vTint = step(0.93, aSeed.y);
 }`;
 

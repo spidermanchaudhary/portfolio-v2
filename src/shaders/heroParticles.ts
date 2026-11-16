@@ -21,7 +21,8 @@ uniform float uPixelRatio;
 uniform vec3  uMouse;
 uniform float uMouseForce;
 uniform float uSpin;
-uniform float uBang;   // 0 = singularity, 1 = expanded
+uniform float uBang;   // expansion scale: 0 = singularity, overshoots, settles at 1
+uniform float uBangK;  // linear progress through the bang 0..1
 
 attribute vec3 aText;
 attribute vec3 aGalaxy;
@@ -71,7 +72,7 @@ void main() {
   pos.z += push * (aSeed.z - 0.5) * 2.0;
 
   // White-hot at the start of the bang, cooling as it expands
-  float hot = 1.0 - smoothstep(0.0, 0.85, uBang);
+  float hot = 1.0 - smoothstep(0.0, 0.7, uBangK);
 
   vec4 mv = modelViewMatrix * vec4(pos, 1.0);
   gl_Position = projectionMatrix * mv;
@@ -87,7 +88,7 @@ void main() {
   // Fade particles that get close to the lens so fly-throughs stay clean
   vAlpha = mix(0.35, 1.0, a) * (1.0 - s * 0.85) * smoothstep(0.6, 4.5, -mv.z);
   // Keep the singularity from blowing the whole frame out to white
-  vAlpha *= mix(0.05, 1.0, smoothstep(0.0, 0.25, uBang));
+  vAlpha *= mix(0.05, 1.0, smoothstep(0.0, 0.06, uBangK));
 }
 `;
 

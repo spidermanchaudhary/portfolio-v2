@@ -18,6 +18,7 @@ import Landmarks from "./landmarks/Landmarks";
 import FpsProbe from "./FpsProbe";
 import CursorLight from "./CursorLight";
 import HyperTunnel from "./HyperTunnel";
+import BangShock from "./hero/BangShock";
 
 const TIERS: Quality[] = ["low", "medium", "high"];
 
@@ -95,6 +96,7 @@ function Scene() {
       <Starfield />
       <HyperTunnel />
       <HeroField />
+      <BangShock />
       <Suspense fallback={null}>
         <Landmarks stations={stations} />
       </Suspense>

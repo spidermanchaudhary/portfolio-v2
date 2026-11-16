@@ -7,6 +7,7 @@ import { flight, useUniverse } from "@/store/universe";
 import { buildCurves, tToU, type Station } from "./track";
 import { useUniverseData } from "@/hooks/useUniverseData";
 import { warpAmount } from "@/lib/warp";
+import { blastAmount } from "@/lib/bang";
 
 const desiredPos = new THREE.Vector3();
 const desiredLook = new THREE.Vector3();
@@ -70,8 +71,10 @@ export default function CameraRig({ stations }: { stations: Station[] }) {
     // Hyperspace: widen the lens and race to the target
     const w = warpAmount();
     lambda += w * 9;
+    // Big Bang: lens punches wide at detonation and relaxes
+    const blast = blastAmount();
     const cam = camera as THREE.PerspectiveCamera;
-    const fov = 42 + w * 24;
+    const fov = 42 + w * 24 + blast * 26;
     if (Math.abs(cam.fov - fov) > 0.01) {
       cam.fov = fov;
       cam.updateProjectionMatrix();
@@ -81,6 +84,14 @@ export default function CameraRig({ stations }: { stations: Station[] }) {
     camera.position.lerp(desiredPos, k);
     look.current.lerp(desiredLook, 1 - Math.exp(-(lambda + 1.5) * dt));
     camera.lookAt(look.current);
+    // ...and the camera shakes with the shockwave
+    if (blast > 0.001) {
+      const a = blast * 0.09;
+      camera.rotation.x += (Math.random() - 0.5) * a;
+      camera.rotation.y += (Math.random() - 0.5) * a;
+      camera.position.x += (Math.random() - 0.5) * a * 3;
+      camera.position.y += (Math.random() - 0.5) * a * 3;
+    }
 
     // Bank slightly into lateral motion and with scroll velocity
     camera.rotation.z += THREE.MathUtils.clamp(-flight.velocity * 0.0009, -0.05, 0.05);

@@ -41,8 +41,8 @@ export default function RevealDirector() {
       root.classList.add("anim-ready");
 
       const inHero = (el: Element) => !!el.closest("#top");
-      // Hero text waits for the intro lids to part (~1.15s) so the two never overlap
-      const heroDelay = (el: Element) => (inHero(el) ? 0.85 : 0);
+      // Hero text waits for the Big Bang to play out before typing in
+      const heroDelay = (el: Element) => (inHero(el) ? 2.2 : 0);
 
       splits.forEach((el, i) => {
         const chars = Array.from(el.querySelectorAll<HTMLElement>(".ch"));
@@ -68,7 +68,7 @@ export default function RevealDirector() {
           opacity: 1,
           duration: 1.1,
           ease: "expo.out",
-          delay: inHero(el) ? 1.1 : 0,
+          delay: inHero(el) ? 2.5 : 0,
           scrollTrigger: inHero(el) ? undefined : { trigger: el, start: "top 92%", once: true },
         });
       });

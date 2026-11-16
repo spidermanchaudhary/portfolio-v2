@@ -9,7 +9,7 @@ import { flight, useUniverse } from "@/store/universe";
 import { PARTICLES } from "@/lib/capabilities";
 import { palette } from "@/lib/palette";
 import { site } from "@/data/site";
-import { bangAmount } from "@/lib/bang";
+import { bangAmount, bangProgress } from "@/lib/bang";
 
 const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 const ray = new THREE.Raycaster();
@@ -76,6 +76,7 @@ export default function HeroField() {
           uMouseForce: { value: 0 },
           uSpin: { value: 0 },
           uBang: { value: 0 },
+          uBangK: { value: 0 },
           uPaper: { value: new THREE.Color(palette.paper) },
           uSignal: { value: new THREE.Color(palette.signalHi) },
         },
@@ -99,9 +100,11 @@ export default function HeroField() {
     u.uPixelRatio.value = gl.getPixelRatio();
 
     // Big Bang, then the debris settles into the name
-    const bang = bangAmount();
-    u.uBang.value = bang;
-    if (booted && bang > 0.6) st.assemble = Math.min(1, st.assemble + dt * 0.5);
+    u.uBang.value = bangAmount();
+    const k = bangProgress();
+    u.uBangK.value = k;
+    // Let the blast play out before the dust starts forming the name
+    if (booted && k > 0.62) st.assemble = Math.min(1, st.assemble + dt * 0.5);
     u.uAssemble.value = st.assemble;
 
     // Scroll: name → galaxy (top → galaxy station), then the galaxy
