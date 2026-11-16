@@ -28,8 +28,9 @@ export default function HeroField() {
   const gl = useThree((s) => s.gl);
   const points = useRef<THREE.Points>(null);
 
-  // Allocate once for the initial tier's budget; downgrades just shrink
-  // the draw range (no reallocation, no hitch).
+  // Count is fixed for the whole visit (picked from the initial tier).
+  // Adaptive quality later changes resolution/post only — never the name,
+  // so it can't thin out or dim mid-visit.
   const initialCount = useRef(PARTICLES[quality]);
   const aspect = size.width / size.height;
   const aspectKey = aspect >= 1 ? "wide" : "tall";
@@ -52,9 +53,6 @@ export default function HeroField() {
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
-  useEffect(() => {
-    geometry.setDrawRange(0, Math.min(initialCount.current, PARTICLES[quality]));
-  }, [quality, geometry]);
 
   const material = useMemo(
     () =>
@@ -69,7 +67,9 @@ export default function HeroField() {
           uAssemble: { value: 0 },
           uMorph: { value: 0 },
           uScatter: { value: 0 },
-          uSize: { value: 1.6 },
+          // Fewer particles (weak devices) → slightly larger points, so the
+          // name keeps the same density and glow
+          uSize: { value: 1.6 * Math.sqrt(PARTICLES.high / initialCount.current) },
           uPixelRatio: { value: 1 },
           uMouse: { value: new THREE.Vector3(99, 99, 0) },
           uMouseForce: { value: 0 },
