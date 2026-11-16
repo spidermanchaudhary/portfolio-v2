@@ -31,6 +31,7 @@ interface UniverseState {
   paletteOpen: boolean;
   /** Easter egg: Cornfield Chase player (click the black hole) */
   soundtrackOpen: boolean;
+  soundtrackPlaying: boolean;
   terminalOpen: boolean;
 
   activeSection: SectionId;
@@ -56,6 +57,7 @@ export const useUniverse = create<UniverseState>((set) => ({
   blueprint: false,
   paletteOpen: false,
   soundtrackOpen: false,
+  soundtrackPlaying: false,
   terminalOpen: false,
   activeSection: "top",
   activeProject: -1,
@@ -88,6 +90,8 @@ export const flight = {
   warpAt: -1,
   /** Black hole's on-screen position/size (px) for its DOM click target */
   hole: { x: 0, y: 0, r: 0, on: false },
+  /** Cornfield Chase loudness 0..1 (bass/mid energy), 0 when silent */
+  music: 0,
   /** performance.now()/1000 of the Big Bang (intro hand-off); <0 = not yet */
   bootAt: -1,
   /** Jump in progress, waiting for the destination route to mount */

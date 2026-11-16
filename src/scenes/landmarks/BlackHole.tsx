@@ -60,10 +60,10 @@ export default function BlackHole({ station, trackIndex }: { station: Station; t
     }
     act.current = damp(act.current, Math.max(0.25, activity(trackIndex, 1.6)), 3, dt);
     const u = material.uniforms;
-    // Spins up while its soundtrack is playing
-    u.uTime.value += dt * (useUniverse.getState().soundtrackOpen ? 2.4 : 1);
+    // Spins up while its soundtrack plays, and breathes with the music
+    u.uTime.value += dt * (useUniverse.getState().soundtrackPlaying ? 2.2 + flight.music * 2 : 1);
     u.uSteps.value = STEPS[quality];
-    u.uIntensity.value = act.current;
+    u.uIntensity.value = act.current * (1 + flight.music * 0.45);
 
     // Face the camera; feed its viewing angle into the virtual camera
     mesh.current.quaternion.copy(state.camera.quaternion);
