@@ -49,7 +49,7 @@ export function readCapabilities() {
 /** Particle budget for the hero field, per quality tier */
 export const PARTICLES: Record<Tier, number> = {
   high: 131072,
-  medium: 65536,
+  medium: 131072, // the name's density is the look — only low trims it
   low: 32768,
 };
 

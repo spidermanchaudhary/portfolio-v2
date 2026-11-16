@@ -6,6 +6,7 @@ import { PerformanceMonitor } from "@react-three/drei";
 import * as THREE from "three";
 import { useUniverse, type Quality } from "@/store/universe";
 import { MAX_DPR } from "@/lib/capabilities";
+import { warpAmount } from "@/lib/warp";
 import { palette } from "@/lib/palette";
 import { useUniverseData } from "@/hooks/useUniverseData";
 import { buildTrack } from "./track";
@@ -29,6 +30,7 @@ export default function Universe() {
   const quality = useUniverse((s) => s.quality);
   const set = useUniverse((s) => s.set);
   const [dpr, setDpr] = useState(() => Math.min(window.devicePixelRatio, MAX_DPR[quality]));
+  const readyAt = useRef(performance.now());
 
   useEffect(() => {
     setDpr(Math.min(window.devicePixelRatio, MAX_DPR[quality]));
@@ -37,7 +39,11 @@ export default function Universe() {
   }, [quality]);
 
   const step = (dir: 1 | -1) => {
-    if (useUniverse.getState().qualityLocked) return;
+    const st = useUniverse.getState();
+    if (st.qualityLocked) return;
+    // Ignore dips that are expected and brief: shader warm-up right after
+    // load, and page-transition jumps
+    if (dir < 0 && (performance.now() - readyAt.current < 6000 || warpAmount() > 0)) return;
     const i = TIERS.indexOf(useUniverse.getState().quality);
     const next = TIERS[THREE.MathUtils.clamp(i + dir, 0, TIERS.length - 1)];
     if (next !== TIERS[i]) set({ quality: next });
@@ -59,8 +65,8 @@ export default function Universe() {
     >
       <PerformanceMonitor
         // Sample ~2s windows; three flips and it settles for good
-        flipflops={3}
-        bounds={(refresh) => (refresh > 90 ? [55, 85] : [45, 58])}
+        flipflops={8}
+        bounds={(refresh) => (refresh > 90 ? [48, 80] : [38, 55])}
         onDecline={() => step(-1)}
         onIncline={() => step(1)}
         onFallback={() => !useUniverse.getState().qualityLocked && set({ quality: "low" })}

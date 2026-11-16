@@ -11,7 +11,7 @@ import { warpAmount } from "@/lib/warp";
 /**
  * Post-processing: mipmap bloom + one merged finish pass (velocity warp,
  * chromatic aberration, grain, vignette, blueprint). Skipped entirely on
- * the low tier — the CSS grain overlay takes over there.
+ * nothing — on the low tier only the finish pass is dropped.
  */
 export default function Post() {
   const quality = useUniverse((s) => s.quality);
@@ -32,19 +32,20 @@ export default function Post() {
     b.value += ((blueprint ? 1 : 0) - b.value) * Math.min(1, dt * 3);
   });
 
-  if (quality === "low") return null;
-
+  // The glow is part of the look, so bloom stays on every tier (same
+  // intensity — only its kernel gets cheaper). The low tier drops just the
+  // finish pass; the CSS grain overlay covers that.
   return (
     <EffectComposer multisampling={0} enableNormalPass={false}>
       <Bloom
         mipmapBlur
-        intensity={quality === "high" ? 1.05 : 0.8}
+        intensity={1.05}
         luminanceThreshold={0.18}
         luminanceSmoothing={0.3}
-        kernelSize={KernelSize.MEDIUM}
+        kernelSize={quality === "low" ? KernelSize.SMALL : KernelSize.MEDIUM}
         radius={0.72}
       />
-      <primitive object={finish} />
+      {quality === "low" ? <></> : <primitive object={finish} />}
     </EffectComposer>
   );
 }
