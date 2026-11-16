@@ -54,7 +54,7 @@ const WORLDS: Record<string, WorldConfig> = {
     users: null,
     kind: "cipher-pairs",
     caption:
-      "Two crowds of anonymous students drift apart. Encrypted beams link pairs across the gap, scrambling their messages in transit.",
+      "Two walls of anonymous students face each other. Encrypted beams link pairs across the gap — plaintext at each end, ciphertext in transit.",
   },
   "6856addebcdbacf66e86be79": {
     order: 3,
@@ -64,7 +64,7 @@ const WORLDS: Record<string, WorldConfig> = {
     users: null,
     kind: "feedback-swarm",
     caption:
-      "A single profile core with a link ring. Anonymous notes stream in from every direction in real time and dock against it.",
+      "A profile with one shareable link. Anonymous notes fly in from every direction in real time and stack into its inbox.",
   },
   "6856addebcdbacf66e86be74": {
     order: 4,
@@ -84,7 +84,7 @@ const WORLDS: Record<string, WorldConfig> = {
     users: 1000,
     kind: "roll-search",
     caption:
-      "A field of roll-number tiles. A search beam sweeps the grid and a single matching tile rises out of it.",
+      "A floor of roll-number tiles. A query is typed, a search beam sweeps the rows, and the one matching tile rises out.",
   },
   "6856addebcdbacf66e86be78": {
     order: 6,
@@ -93,7 +93,7 @@ const WORLDS: Record<string, WorldConfig> = {
     metrics: [],
     users: null,
     kind: "rolodex",
-    caption: "A card index spins like a rolodex and settles on one student record.",
+    caption: "A rolodex with A–Z index tabs spins, slows, and settles on one student record.",
   },
 };
 

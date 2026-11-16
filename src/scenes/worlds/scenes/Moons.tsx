@@ -5,34 +5,55 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { MiniSceneProps } from "../types";
 import { palette } from "@/lib/palette";
+import { useLazyTexture } from "../../shared/useLazyTexture";
 
 /**
- * Generic fallback for projects that arrive from the API without a bespoke
- * world: three small moons on inclined orbits around a beacon.
+ * Generic world for projects that arrive from the API without a bespoke
+ * scene: the real screenshot, received as a floating transmission panel.
+ * (File keeps its old name so existing imports stay stable.)
  */
-export default function Moons({ activityRef, scale }: MiniSceneProps) {
+export default function Transmission({ project, activityRef, side }: MiniSceneProps) {
   const group = useRef<THREE.Group>(null);
-  const geo = useMemo(() => new THREE.IcosahedronGeometry(0.22, 2), []);
+  const url = project.thumbnail.includes("/image/upload/")
+    ? project.thumbnail.replace("/image/upload/", "/image/upload/f_jpg,q_75,w_960/")
+    : project.thumbnail;
+  const map = useLazyTexture(url);
+
   const mat = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: palette.paper, roughness: 0.6, metalness: 0.1, emissive: palette.signal, emissiveIntensity: 0.2 }),
+    () =>
+      new THREE.ShaderMaterial({
+        transparent: true,
+        uniforms: { uMap: { value: null }, uHas: { value: 0 }, uReveal: { value: 0 }, uTime: { value: 0 } },
+        vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);} `,
+        fragmentShader: `
+          uniform sampler2D uMap; uniform float uHas; uniform float uReveal; uniform float uTime; varying vec2 vUv;
+          void main(){
+            if (1.0 - vUv.y > uReveal * 1.1) discard;
+            vec3 c = uHas > 0.5 ? texture2D(uMap, vUv).rgb : vec3(0.08);
+            c *= 0.9 + 0.1 * sin(vUv.y * 600.0 + uTime * 4.0);
+            gl_FragColor = vec4(c * 0.85, 1.0);
+          }`,
+      }),
     []
   );
+  const frame = useMemo(() => new THREE.EdgesGeometry(new THREE.PlaneGeometry(3.24, 1.86)), []);
+
   useFrame((state) => {
-    const a = activityRef.current;
-    if (!group.current || a < 0.01) return;
-    const t = state.clock.elapsedTime;
-    group.current.children.forEach((m, i) => {
-      const r = (1.1 + i * 0.55) * scale;
-      const sp = 0.5 - i * 0.12;
-      m.position.set(Math.cos(t * sp + i * 2) * r, Math.sin(t * sp * 0.7 + i) * 0.4, Math.sin(t * sp + i * 2) * r);
-      m.scale.setScalar(a);
-    });
+    mat.uniforms.uMap.value = map;
+    mat.uniforms.uHas.value = map ? 1 : 0;
+    mat.uniforms.uReveal.value = activityRef.current;
+    mat.uniforms.uTime.value = state.clock.elapsedTime;
+    if (group.current) group.current.position.y = Math.sin(state.clock.elapsedTime * 0.6) * 0.05;
   });
+
   return (
-    <group ref={group}>
-      {[0, 1, 2].map((i) => (
-        <mesh key={i} geometry={geo} material={mat} />
-      ))}
+    <group ref={group} rotation={[0, -side * 0.25, 0]}>
+      <mesh material={mat}>
+        <planeGeometry args={[3.2, 1.8]} />
+      </mesh>
+      <lineSegments geometry={frame}>
+        <lineBasicMaterial color={palette.paper} transparent opacity={0.5} />
+      </lineSegments>
     </group>
   );
 }

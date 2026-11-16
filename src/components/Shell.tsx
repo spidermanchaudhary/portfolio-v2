@@ -11,6 +11,7 @@ import Loader from "./chrome/Loader";
 import FlightDriver from "./chrome/FlightDriver";
 import RevealDirector from "./chrome/RevealDirector";
 import AudioDirector from "./chrome/AudioDirector";
+import SceneBoundary from "./SceneBoundary";
 
 // three.js + R3F + postprocessing live in their own chunk, fetched after
 // first paint — they never block the HTML, LCP or hydration.
@@ -60,7 +61,11 @@ export default function Shell({
   return (
     <UniverseDataContext.Provider value={{ projects, skills }}>
       <div aria-hidden className="static-sky pointer-events-none fixed inset-0 -z-10" />
-      {mountScene && <Universe />}
+      {mountScene && (
+        <SceneBoundary>
+          <Universe />
+        </SceneBoundary>
+      )}
       <div aria-hidden className="grain pointer-events-none" />
       <Loader />
       <FlightDriver />

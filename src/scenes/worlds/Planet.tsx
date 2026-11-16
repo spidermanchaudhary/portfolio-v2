@@ -6,22 +6,25 @@ import * as THREE from "three";
 import { atmosphereFragment, atmosphereVertex, planetFragment, planetVertex } from "@/shaders/planet";
 import { palette } from "@/lib/palette";
 
-const sphere = new THREE.SphereGeometry(1, 96, 64);
+const sphere = new THREE.SphereGeometry(1, 128, 96);
 
 /**
- * A world's planet. `impact` (0..1, from reported users) drives ink
- * brightness and atmosphere glow; size is set by the parent via `radius`.
+ * A world's planet, seen as a massive backlit horizon. `impact` (0..1,
+ * from reported users) drives contour brightness and atmosphere glow;
+ * `radius` is set by the parent from the same number.
  */
 export default function Planet({
   radius,
   impact,
+  seed,
   activityRef,
-  tilt = 0.4,
+  lightDir,
 }: {
   radius: number;
   impact: number;
+  seed: number;
   activityRef: React.MutableRefObject<number>;
-  tilt?: number;
+  lightDir: THREE.Vector3;
 }) {
   const body = useRef<THREE.Mesh>(null);
 
@@ -32,11 +35,13 @@ export default function Planet({
         fragmentShader: planetFragment,
         uniforms: {
           uInk: { value: new THREE.Color(palette.signalHi) },
-          uBody: { value: new THREE.Color("#1b1c24") },
-          uLightDir: { value: new THREE.Vector3(-0.6, 0.5, 0.65) },
+          uBody: { value: new THREE.Color("#23252f") },
+          uLightDir: { value: lightDir },
           uImpact: { value: impact },
           uActive: { value: 0 },
           uTime: { value: 0 },
+          uSeed: { value: seed },
+          uDensity: { value: 9 + (seed % 3) * 3 },
         },
       }),
       new THREE.ShaderMaterial({
@@ -48,23 +53,24 @@ export default function Planet({
         blending: THREE.AdditiveBlending,
         uniforms: {
           uColor: { value: new THREE.Color(palette.signal) },
-          uIntensity: { value: 0.35 + impact * 0.85 },
+          uLightDir: { value: lightDir },
+          uIntensity: { value: 0.7 + impact * 1.1 },
         },
       }),
     ],
-    [impact]
+    [impact, seed, lightDir]
   );
 
   useFrame((_, dt) => {
     planetMat.uniforms.uTime.value += dt;
     planetMat.uniforms.uActive.value = activityRef.current;
-    if (body.current) body.current.rotation.y += dt * 0.04;
+    if (body.current) body.current.rotation.y += dt * 0.008;
   });
 
   return (
-    <group rotation={[tilt * 0.3, 0, tilt]}>
+    <group>
       <mesh ref={body} geometry={sphere} material={planetMat} scale={radius} />
-      <mesh geometry={sphere} material={atmoMat} scale={radius * 1.16} />
+      <mesh geometry={sphere} material={atmoMat} scale={radius * 1.035} />
     </group>
   );
 }

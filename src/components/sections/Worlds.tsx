@@ -145,7 +145,7 @@ function WorldChapter({ project, index }: { project: Project; index: number }) {
             />
           </figure>
 
-          <p className="mt-10 max-w-md border-l border-signal/60 pl-4 font-mono text-[0.72rem] leading-5 text-dust">
+          <p className="mt-10 max-w-md border-l border-signal/60 bg-void/70 py-2 pl-4 pr-3 font-mono text-[0.72rem] leading-5 text-dust backdrop-blur-sm">
             <span className="text-signal-hi">in view —</span> {project.world.caption}
           </p>
         </div>

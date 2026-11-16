@@ -54,14 +54,19 @@ function World({ project, station, trackIndex }: { project: Project; station: St
   const impact = impactGlow(project.users);
   const s = station.scale;
 
-  // Planet sits behind the mini-scene, pushed outward from the text panel
+  // A horizon, not a globe: a huge body below and behind the scene, so only
+  // its backlit limb sweeps through the frame. Radius grows with reported
+  // users (flatter horizon, brighter air); unreported = base size.
+  const R = 14 + (s - 1) * 11;
   const planetPos = useMemo(
-    () => new THREE.Vector3(station.side * (1.5 + s * 1.0), 0.6 * s, -5.2 * s),
-    [station.side, s]
+    () => new THREE.Vector3(station.side * R * 0.3, -R * 1.07, -R * 0.85 - 3),
+    [station.side, R]
   );
+  // Sun far behind the planet → night side faces you, only the limb is lit
+  const lightDir = useMemo(() => new THREE.Vector3(-station.side * 0.3, 0.35, -1).normalize(), [station.side]);
 
   useFrame((_, dt) => {
-    const near = isNear(trackIndex, 3.2, project.slug);
+    const near = isNear(trackIndex, 2.6, project.slug);
     if (group.current) group.current.visible = near;
     if (!near) {
       act.current = 0;
@@ -73,35 +78,9 @@ function World({ project, station, trackIndex }: { project: Project; station: St
   return (
     <group ref={group} position={station.anchor}>
       <group position={planetPos}>
-        <Planet radius={1.75 * s} impact={impact} activityRef={act} tilt={station.side * 0.35} />
-        <OrbitRing radius={1.75 * s * 1.6} activityRef={act} />
+        <Planet radius={R} impact={impact} seed={station.index + 1} activityRef={act} lightDir={lightDir} />
       </group>
       <Scene project={project} trackIndex={trackIndex} activityRef={act} side={station.side} scale={s} />
     </group>
   );
-}
-
-/** Dotted orbit ring around the planet, drawn with points */
-function OrbitRing({ radius, activityRef }: { radius: number; activityRef: React.MutableRefObject<number> }) {
-  const ref = useRef<THREE.Points>(null);
-  const geo = useMemo(() => {
-    const n = 180;
-    const p = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      const a = (i / n) * Math.PI * 2;
-      p[i * 3] = Math.cos(a) * radius;
-      p[i * 3 + 2] = Math.sin(a) * radius;
-    }
-    return new THREE.BufferGeometry().setAttribute("position", new THREE.BufferAttribute(p, 3));
-  }, [radius]);
-  const mat = useMemo(
-    () => new THREE.PointsMaterial({ color: "#7D92FF", size: 0.045, transparent: true, opacity: 0.5, depthWrite: false }),
-    []
-  );
-  useFrame((_, dt) => {
-    if (!ref.current) return;
-    ref.current.rotation.y += dt * 0.05;
-    mat.opacity = 0.15 + activityRef.current * 0.45;
-  });
-  return <points ref={ref} geometry={geo} material={mat} rotation={[0.42, 0, 0.18]} />;
 }

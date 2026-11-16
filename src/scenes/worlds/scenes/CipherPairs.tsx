@@ -5,51 +5,26 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { MiniSceneProps } from "../types";
 import { palette } from "@/lib/palette";
-import { labelTexture, rng } from "../../shared/canvasTexture";
+import { canvasTexture, labelTexture, rng, roundRect } from "../../shared/canvasTexture";
 
-const CROWD = 240;
-const PAIRS = 18;
-const GAP = 1.3;
+const COLS = 4;
+const ROWS = 5;
+const PER_WALL = COLS * ROWS;
+const TILE = 0.3;
+const GAP_X = 1.35; // distance of each wall from centre
+const PAIRS = 14;
 const SIGNAL = new THREE.Color(palette.signalHi);
-
-const crowdVertex = /* glsl */ `
-uniform float uTime;
-uniform float uPixelRatio;
-uniform float uSpread;
-attribute float aSeed;
-varying float vSeed;
-void main() {
-  vec3 p = position;
-  p.x += sign(p.x) * uSpread;
-  p += 0.05 * vec3(sin(uTime * 0.7 + aSeed * 30.0), cos(uTime * 0.6 + aSeed * 21.0), sin(uTime * 0.5 + aSeed * 11.0));
-  vSeed = aSeed;
-  vec4 mv = modelViewMatrix * vec4(p, 1.0);
-  gl_Position = projectionMatrix * mv;
-  gl_PointSize = (2.0 + aSeed * 2.5) * uPixelRatio * (7.0 / -mv.z);
-}`;
-const crowdFragment = /* glsl */ `
-uniform vec3 uColor;
-uniform float uOpacity;
-varying float vSeed;
-void main() {
-  float d = length(gl_PointCoord - 0.5);
-  if (d > 0.5) discard;
-  gl_FragColor = vec4(uColor, smoothstep(0.5, 0.15, d) * uOpacity * (0.45 + vSeed * 0.55));
-}`;
 
 // Beams: 2 vertices per pair; aEnd interpolates 0→1 along the segment
 const beamVertex = /* glsl */ `
-uniform float uSpread;
 attribute float aEnd;
 attribute float aPhase;
 varying float vAlong;
 varying float vPhase;
 void main() {
-  vec3 p = position;
-  p.x += sign(p.x) * uSpread;
   vAlong = aEnd;
   vPhase = aPhase;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }`;
 const beamFragment = /* glsl */ `
 uniform float uTime;
@@ -59,77 +34,83 @@ uniform vec3 uCipher;
 varying float vAlong;
 varying float vPhase;
 void main() {
-  float packet = fract(uTime * 0.32 + vPhase);
-  float head = smoothstep(0.07, 0.0, abs(vAlong - packet));
-  // In transit (middle 70%) the message is ciphertext: blue + flicker
-  float transit = smoothstep(0.12, 0.2, vAlong) * smoothstep(0.88, 0.8, vAlong);
-  float flick = 0.6 + 0.4 * fract(sin(floor(uTime * 24.0) + vPhase * 91.0) * 4375.5);
+  float packet = fract(uTime * 0.3 + vPhase);
+  float head = smoothstep(0.08, 0.0, abs(vAlong - packet));
+  // In transit (middle stretch) the message is ciphertext: blue + flicker
+  float transit = smoothstep(0.15, 0.25, vAlong) * smoothstep(0.85, 0.75, vAlong);
+  float flick = 0.55 + 0.45 * fract(sin(floor(uTime * 24.0) + vPhase * 91.0) * 4375.5);
   vec3 c = mix(uPlain, uCipher, transit);
-  float a = (0.1 + head * mix(1.0, flick, transit) * 1.4) * uOpacity;
+  float a = (0.08 + head * mix(1.0, flick, transit) * 1.5) * uOpacity;
   gl_FragColor = vec4(c * (1.0 + head), a);
 }`;
 
 /**
- * BlindBook — two crowds of anonymous students. Encrypted beams link
- * pairs across the gap: plaintext at each end, ciphertext in transit,
- * through a padlock in the middle.
+ * BlindBook — two walls of anonymous students face each other. Encrypted
+ * beams link pairs across the gap: plaintext at each end, ciphertext in
+ * transit, beating through a padlock in the middle.
  */
 export default function CipherPairs({ activityRef, side }: MiniSceneProps) {
   const lock = useRef<THREE.Group>(null);
+  const walls = useRef<THREE.InstancedMesh>(null);
 
-  const { crowdGeo, beamGeo } = useMemo(() => {
+  const { tiles, beamGeo, avatar, label } = useMemo(() => {
     const r = rng(1337);
-    const pos = new Float32Array(CROWD * 2 * 3);
-    const seed = new Float32Array(CROWD * 2);
-    const pts: THREE.Vector3[] = [];
-    for (let i = 0; i < CROWD * 2; i++) {
-      const left = i < CROWD;
-      // Uniform-ish ball
-      const u = r() * 2 - 1;
-      const th = r() * Math.PI * 2;
-      const rad = 0.85 * Math.cbrt(r());
-      const s = Math.sqrt(1 - u * u);
-      const v = new THREE.Vector3(s * Math.cos(th) * rad * 0.8 + (left ? -GAP : GAP), u * rad, s * Math.sin(th) * rad * 0.8);
-      pts.push(v);
-      pos.set([v.x, v.y, v.z], i * 3);
-      seed[i] = r();
+    // Each wall is angled toward the centre, like two crowds facing off
+    const tiles: { pos: THREE.Vector3; rot: THREE.Euler; lit: number }[] = [];
+    for (const dir of [-1, 1]) {
+      for (let i = 0; i < PER_WALL; i++) {
+        const c = i % COLS;
+        const row = Math.floor(i / COLS);
+        const localX = (c - (COLS - 1) / 2) * (TILE + 0.06);
+        const yaw = -dir * 0.65;
+        const pos = new THREE.Vector3(
+          dir * GAP_X + Math.cos(yaw) * localX,
+          ((ROWS - 1) / 2 - row) * (TILE + 0.06),
+          -Math.sin(yaw) * localX
+        );
+        tiles.push({ pos, rot: new THREE.Euler(0, yaw, 0), lit: r() });
+      }
     }
-    const crowdGeo = new THREE.BufferGeometry();
-    crowdGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    crowdGeo.setAttribute("aSeed", new THREE.BufferAttribute(seed, 1));
 
     const bPos = new Float32Array(PAIRS * 6);
     const bEnd = new Float32Array(PAIRS * 2);
     const bPhase = new Float32Array(PAIRS * 2);
     for (let k = 0; k < PAIRS; k++) {
-      const a = pts[Math.floor(r() * CROWD)];
-      const b = pts[CROWD + Math.floor(r() * CROWD)];
-      // Alternate direction so messages flow both ways
+      const a = tiles[Math.floor(r() * PER_WALL)].pos;
+      const b = tiles[PER_WALL + Math.floor(r() * PER_WALL)].pos;
       const [from, to] = k % 2 ? [b, a] : [a, b];
-      bPos.set([from.x, from.y, from.z, to.x, to.y, to.z], k * 6);
+      bPos.set([from.x, from.y, from.z + 0.02, to.x, to.y, to.z + 0.02], k * 6);
       bEnd.set([0, 1], k * 2);
-      const ph = k / PAIRS;
-      bPhase.set([ph, ph], k * 2);
+      bPhase.set([k / PAIRS, k / PAIRS], k * 2);
     }
     const beamGeo = new THREE.BufferGeometry();
     beamGeo.setAttribute("position", new THREE.BufferAttribute(bPos, 3));
     beamGeo.setAttribute("aEnd", new THREE.BufferAttribute(bEnd, 1));
     beamGeo.setAttribute("aPhase", new THREE.BufferAttribute(bPhase, 1));
-    return { crowdGeo, beamGeo };
+
+    // Anonymous avatar: a silhouette behind a mask band
+    const avatar = canvasTexture(128, 128, (c, w, h) => {
+      roundRect(c, 3, 3, w - 6, h - 6, 18);
+      c.fillStyle = "#16171d";
+      c.fill();
+      c.strokeStyle = "rgba(236,234,227,0.35)";
+      c.lineWidth = 3;
+      c.stroke();
+      c.fillStyle = "#ECEAE3";
+      c.beginPath();
+      c.arc(w / 2, 50, 21, 0, Math.PI * 2);
+      c.fill();
+      c.beginPath();
+      c.arc(w / 2, h + 6, 44, Math.PI, 0);
+      c.fill();
+      c.fillStyle = "#3D5CFF";
+      c.fillRect(w / 2 - 26, 43, 52, 11);
+    });
+    return { tiles, beamGeo, avatar, label: labelTexture("end-to-end encrypted", { color: "#96948C", size: 36 }) };
   }, []);
 
-  const crowdMat = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
-        vertexShader: crowdVertex,
-        fragmentShader: crowdFragment,
-        transparent: true,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        uniforms: { uTime: { value: 0 }, uPixelRatio: { value: 1 }, uSpread: { value: 0.4 }, uColor: { value: new THREE.Color(palette.paper) }, uOpacity: { value: 0 } },
-      }),
-    []
-  );
+  const tileGeo = useMemo(() => new THREE.PlaneGeometry(TILE, TILE), []);
+  const tileMat = useMemo(() => new THREE.MeshBasicMaterial({ map: avatar, transparent: true, side: THREE.DoubleSide, toneMapped: false }), [avatar]);
   const beamMat = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -140,7 +121,6 @@ export default function CipherPairs({ activityRef, side }: MiniSceneProps) {
         blending: THREE.AdditiveBlending,
         uniforms: {
           uTime: { value: 0 },
-          uSpread: { value: 0.4 },
           uOpacity: { value: 0 },
           uPlain: { value: new THREE.Color(palette.paper) },
           uCipher: { value: new THREE.Color(palette.signalHi).multiplyScalar(1.5) },
@@ -148,37 +128,50 @@ export default function CipherPairs({ activityRef, side }: MiniSceneProps) {
       }),
     []
   );
-  const lockMat = useMemo(() => new THREE.MeshBasicMaterial({ color: palette.paper, toneMapped: false, transparent: true, opacity: 0.9 }), []);
-  const label = useMemo(() => labelTexture("end-to-end encrypted", { color: "#96948C", size: 36 }), []);
+  const lockMat = useMemo(() => new THREE.MeshBasicMaterial({ color: palette.paper, toneMapped: false }), []);
   const labelMat = useMemo(() => new THREE.MeshBasicMaterial({ map: label.tex, transparent: true, opacity: 0 }), [label]);
+  const tmp = useMemo(() => ({ m: new THREE.Matrix4(), q: new THREE.Quaternion(), s: new THREE.Vector3(), p: new THREE.Vector3(), c: new THREE.Color() }), []);
 
   useFrame((state) => {
     const a = activityRef.current;
     const t = state.clock.elapsedTime;
-    crowdMat.uniforms.uTime.value = t;
-    crowdMat.uniforms.uPixelRatio.value = state.gl.getPixelRatio();
     beamMat.uniforms.uTime.value = t;
-    // Crowds start apart and drift into range as you arrive
-    const spread = 0.9 * (1 - a) + Math.sin(t * 0.4) * 0.05;
-    crowdMat.uniforms.uSpread.value = spread;
-    beamMat.uniforms.uSpread.value = spread;
-    crowdMat.uniforms.uOpacity.value = 0.35 + a * 0.65;
     beamMat.uniforms.uOpacity.value = THREE.MathUtils.smoothstep(a, 0.3, 1);
     labelMat.opacity = THREE.MathUtils.smoothstep(a, 0.7, 1) * 0.9;
+
+    const inst = walls.current;
+    if (inst) {
+      const { m, q, s, p, c } = tmp;
+      tiles.forEach((tile, i) => {
+        // Walls slide in from wider apart as you arrive
+        p.copy(tile.pos);
+        p.x += Math.sign(tile.pos.x) * (1 - a) * 0.9;
+        q.setFromEuler(tile.rot);
+        s.setScalar(0.5 + a * 0.5);
+        m.compose(p, q, s);
+        inst.setMatrixAt(i, m);
+        // Someone in the crowd is always typing
+        const typing = Math.pow(Math.max(0, Math.sin(t * 1.3 + tile.lit * 40)), 20);
+        c.setScalar(0.55 + typing * 0.6);
+        inst.setColorAt(i, c);
+      });
+      inst.instanceMatrix.needsUpdate = true;
+      if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+    }
+
     if (lock.current) {
-      // Heartbeat in step with the packets passing through
-      const beat = Math.pow(Math.max(0, Math.sin(t * 0.32 * Math.PI * 2 * 3)), 12);
+      const beat = Math.pow(Math.max(0, Math.sin(t * 0.3 * Math.PI * 2 * 2)), 12);
       lock.current.scale.setScalar((0.6 + a * 0.4) * (1 + beat * 0.12));
-      lockMat.color.set(palette.paper).lerp(SIGNAL, beat).multiplyScalar(1 + beat * 1.5);
+      lockMat.color.set(palette.paper).lerp(SIGNAL, beat).multiplyScalar(0.9 + beat * 1.2);
     }
   });
 
   return (
-    <group rotation={[0.08, -side * 0.14, 0]}>
-      <points geometry={crowdGeo} material={crowdMat} frustumCulled={false} />
+    <group rotation={[0.05, -side * 0.12, 0]}>
+      <instancedMesh ref={walls} args={[tileGeo, tileMat, PER_WALL * 2]} frustumCulled={false} />
       <lineSegments geometry={beamGeo} material={beamMat} frustumCulled={false} />
       {/* Padlock */}
-      <group ref={lock}>
+      <group ref={lock} position={[0, 0, 0.3]}>
         <mesh material={lockMat} position={[0, -0.08, 0]}>
           <boxGeometry args={[0.34, 0.26, 0.08]} />
         </mesh>
@@ -190,7 +183,7 @@ export default function CipherPairs({ activityRef, side }: MiniSceneProps) {
           <meshBasicMaterial color={palette.void} />
         </mesh>
       </group>
-      <mesh material={labelMat} position={[0, -1.25, 0]}>
+      <mesh material={labelMat} position={[0, -1.25, 0.3]}>
         <planeGeometry args={[0.16 * label.aspect, 0.16]} />
       </mesh>
     </group>

@@ -153,6 +153,7 @@ export default async function WorkPage({ params }: Params) {
               width={1280}
               height={720}
               sizes="(min-width: 1024px) 40vw, 92vw"
+              priority
               className="aspect-video w-full object-cover object-top"
             />
             <figcaption className="flex justify-between px-1 pt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
@@ -161,7 +162,7 @@ export default async function WorkPage({ params }: Params) {
             </figcaption>
           </figure>
 
-          <p className="border-l border-signal/60 pl-4 font-mono text-[0.72rem] leading-5 text-dust">
+          <p className="border-l border-signal/60 bg-void/70 py-2 pl-4 pr-3 font-mono text-[0.72rem] leading-5 text-dust backdrop-blur-sm">
             <span className="text-signal-hi">in view —</span> {project.world.caption}
           </p>
         </div>
