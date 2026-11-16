@@ -129,6 +129,19 @@ export function buildTrack(projects: Project[], aspect: number): Station[] {
     side: 1,
   });
 
+  // Liftoff: the footer. Camera drops back and low; the rig tilts it up to
+  // follow the rocket (flight.rocketAlt) as the visitor scrolls.
+  stations.push({
+    key: "liftoff",
+    kind: "launch",
+    index: 1,
+    anchor: pad,
+    cam: v(pad.x + (wide ? 1.2 : 0), pad.y + 0.6, pad.z + (wide ? 15 : 19)),
+    look: v(pad.x, pad.y + 2.6, pad.z),
+    scale: 1,
+    side: 1,
+  });
+
   return stations;
 }
 

@@ -76,6 +76,8 @@ export const flight = {
   progress: 0,
   /** Camera speed along the track, world units/sec (signed, + = forward) */
   speed: 0,
+  /** Smoothed camera velocity vector, world units/sec */
+  vel: { x: 0, y: 0, z: 0 },
   /** Pointer in normalized device coords (-1..1). Starts off-screen so the
    *  hero name isn't carved open before the visitor moves the mouse. */
   pointer: { x: 0, y: -3 },
@@ -85,4 +87,8 @@ export const flight = {
   fuel: 0,
   /** performance.now()/1000 when the contact form last launched; <0 = never */
   launchAt: -1,
+  /** Launch sequence progress 0..1 (scroll-scrubbed or submit-triggered) */
+  launchP: 0,
+  /** Rocket altitude above the pad, world units — the camera follows it */
+  rocketAlt: 0,
 };

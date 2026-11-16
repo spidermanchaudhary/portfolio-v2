@@ -204,3 +204,12 @@ html[data-transition="in"] main {
   opacity: 0;
   filter: blur(6px);
 }
+
+/* No canvas → no rocket: collapse the launch stage to a normal footer */
+html.lite .lite-hide {
+  display: none;
+}
+html.lite footer[data-station="liftoff"] {
+  min-height: 0;
+  padding-top: 2.5rem;
+}

@@ -14,13 +14,14 @@ export default function Landmarks({ stations, skills }: { stations: Station[]; s
   const toolbox = idx("toolbox");
   const signals = idx("signals");
   const launch = idx("launch");
+  const liftoff = idx("liftoff");
 
   return (
     <>
       <OriginTrail stations={stations} />
       {toolbox >= 0 && <ToolboxBelt station={stations[toolbox]} trackIndex={toolbox} skills={skills} />}
       {signals >= 0 && <Pulsar station={stations[signals]} trackIndex={signals} count={reviews.length} />}
-      {launch >= 0 && <LaunchPad station={stations[launch]} trackIndex={launch} />}
+      {launch >= 0 && <LaunchPad station={stations[launch]} trackIndex={launch} liftIndex={liftoff >= 0 ? liftoff : launch + 1} />}
     </>
   );
 }

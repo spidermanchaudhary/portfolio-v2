@@ -6,7 +6,6 @@ import * as THREE from "three";
 import { flight, useUniverse } from "@/store/universe";
 import { buildCurves, tToU, type Station } from "./track";
 import { useUniverseData } from "@/hooks/useUniverseData";
-import { LAUNCH_SECONDS, probeAltitude } from "./landmarks/LaunchPad";
 
 const desiredPos = new THREE.Vector3();
 const desiredLook = new THREE.Vector3();
@@ -26,6 +25,7 @@ export default function CameraRig({ stations }: { stations: Station[] }) {
   const look = useRef(new THREE.Vector3(0, 0, 0));
   const orbit = useRef(0);
   const lastZ = useRef(camera.position.z);
+  const last = useRef(camera.position.clone());
   const wide = size.width / size.height >= 1.1;
 
   const focus = useMemo(() => {
@@ -57,17 +57,13 @@ export default function CameraRig({ stations }: { stations: Station[] }) {
       curves.look.getPoint(u, desiredLook);
       orbit.current = 0;
 
-      // Contact launch: tilt up and follow the probe for a few seconds
-      if (flight.launchAt > 0 && flight.t > n - 1.6) {
-        const since = performance.now() / 1000 - flight.launchAt;
-        if (since >= 0 && since < LAUNCH_SECONDS + 2) {
-          const climb = Math.min(probeAltitude(since), 14);
-          const ease = since < LAUNCH_SECONDS ? 1 : 1 - (since - LAUNCH_SECONDS) / 2;
-          desiredLook.y += climb * 0.8 * ease;
-          desiredPos.y += climb * 0.18 * ease;
-          desiredPos.z += climb * 0.25 * ease;
-          lambda = 3;
-        }
+      // Launch: tilt up and follow the rocket (scrubbed by scroll, or
+      // played after the contact form sends)
+      const alt = Math.min(flight.rocketAlt, 26);
+      if (alt > 0.01) {
+        desiredLook.y += alt * 0.82;
+        desiredPos.y += alt * 0.22;
+        desiredPos.z += alt * 0.12;
       }
     }
 
@@ -85,10 +81,16 @@ export default function CameraRig({ stations }: { stations: Station[] }) {
     // Bank slightly into lateral motion and with scroll velocity
     camera.rotation.z += THREE.MathUtils.clamp(-flight.velocity * 0.0009, -0.05, 0.05);
 
-    // Forward speed (units/sec) for streaks and audio
+    // Camera velocity (units/sec) for streaks and audio
+    const inv = 1 / Math.max(dt, 1e-3);
+    const k2 = Math.min(1, dt * 10);
     const dz = lastZ.current - camera.position.z;
+    flight.vel.x += ((camera.position.x - last.current.x) * inv - flight.vel.x) * k2;
+    flight.vel.y += ((camera.position.y - last.current.y) * inv - flight.vel.y) * k2;
+    flight.vel.z += ((camera.position.z - last.current.z) * inv - flight.vel.z) * k2;
+    last.current.copy(camera.position);
     lastZ.current = camera.position.z;
-    flight.speed += (dz / Math.max(dt, 1e-3) - flight.speed) * Math.min(1, dt * 10);
+    flight.speed += (dz * inv - flight.speed) * k2;
   });
 
   return null;

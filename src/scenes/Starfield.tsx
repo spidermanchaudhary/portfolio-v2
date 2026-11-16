@@ -142,10 +142,12 @@ export default function Starfield() {
   useFrame(({ gl }, dt) => {
     starMat.uniforms.uTime.value += dt;
     starMat.uniforms.uPixelRatio.value = gl.getPixelRatio();
-    // Streak length follows camera speed along the track
-    const v = flight.speed;
-    const len = THREE.MathUtils.clamp(Math.abs(v) * 0.09, 0, 9);
-    streakMat.uniforms.uStreak.value.set(0, 0, Math.sign(v) * -len);
+    // Streaks trail opposite the camera's motion — forward flight smears
+    // along z, the rocket chase smears vertically
+    const { x, y, z } = flight.vel;
+    const speed = Math.hypot(x, y, z);
+    const len = THREE.MathUtils.clamp(speed * 0.09, 0, 9);
+    if (speed > 1e-3) streakMat.uniforms.uStreak.value.set(x, y, z).multiplyScalar(-len / speed);
     streakMat.uniforms.uOpacity.value = THREE.MathUtils.smoothstep(len, 0.4, 3.5) * 0.55;
   });
 
