@@ -5,12 +5,12 @@ import { useUniverse } from "@/store/universe";
 import { triggerBang } from "@/lib/bang";
 
 const LINE = "It all started with a big bang.";
-const READ_MS = 1100; // time to read the line
+const READ_MS = 2000; // the line holds for 2s
 const COLLAPSE_MS = 320; // line collapses into a point
 const MAX_MS = 4000;
 
 /**
- * Intro (~3s total):
+ * Intro (~4s total):
  *   1. "It all started with a big bang." fades in, word by word
  *   2. the line collapses into a single point of light
  *   3. the point detonates — the WebGL scene takes over: particles and
