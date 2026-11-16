@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { flight, useUniverse } from "@/store/universe";
 import { palette } from "@/lib/palette";
 import { warpAmount } from "@/lib/warp";
+import { bangAmount } from "@/lib/bang";
 
 const STARS = { high: 9000, medium: 6000, low: 3500 } as const;
 
@@ -16,16 +17,18 @@ const Z_FAR = -420;
 const starVertex = /* glsl */ `
 uniform float uTime;
 uniform float uPixelRatio;
+uniform float uBang;
 attribute vec2 aSeed;
 varying float vAlpha;
 varying float vTint;
 void main() {
-  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  // Stars are flung out from the singularity at the origin
+  vec4 mv = modelViewMatrix * vec4(position * uBang, 1.0);
   gl_Position = projectionMatrix * mv;
   float tw = 0.65 + 0.35 * sin(uTime * (0.6 + aSeed.x * 2.2) + aSeed.y * 40.0);
   gl_PointSize = (0.6 + aSeed.x * 1.9) * uPixelRatio * (34.0 / -mv.z);
   gl_PointSize = clamp(gl_PointSize, 0.0, 6.0 * uPixelRatio);
-  vAlpha = tw * smoothstep(240.0, 30.0, -mv.z);
+  vAlpha = tw * smoothstep(240.0, 30.0, -mv.z) * smoothstep(0.0, 0.3, uBang);
   vTint = step(0.93, aSeed.y);
 }`;
 
@@ -120,6 +123,7 @@ export default function Starfield() {
         uniforms: {
           uTime: { value: 0 },
           uPixelRatio: { value: 1 },
+          uBang: { value: 0 },
           uPaper: { value: new THREE.Color(palette.paper) },
           uSignal: { value: new THREE.Color(palette.signalHi) },
         },
@@ -143,6 +147,7 @@ export default function Starfield() {
   useFrame(({ gl }, dt) => {
     starMat.uniforms.uTime.value += dt;
     starMat.uniforms.uPixelRatio.value = gl.getPixelRatio();
+    starMat.uniforms.uBang.value = bangAmount();
     // Streaks trail opposite the camera's motion — forward flight smears
     // along z, the rocket chase smears vertically
     const { x, y, z } = flight.vel;

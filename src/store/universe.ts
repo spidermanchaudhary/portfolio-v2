@@ -83,6 +83,8 @@ export const flight = {
   tilt: { x: 0, y: 0 },
   /** performance.now()/1000 when the last hyperspace jump began; <0 = none */
   warpAt: -1,
+  /** performance.now()/1000 of the Big Bang (intro hand-off); <0 = not yet */
+  bootAt: -1,
   /** Jump in progress, waiting for the destination route to mount */
   warpHold: false,
   /** performance.now()/1000 when deceleration began; <0 = not yet */

@@ -21,6 +21,7 @@ uniform float uPixelRatio;
 uniform vec3  uMouse;
 uniform float uMouseForce;
 uniform float uSpin;
+uniform float uBang;   // 0 = singularity, 1 = expanded
 
 attribute vec3 aText;
 attribute vec3 aGalaxy;
@@ -50,7 +51,8 @@ void main() {
   // Tilt the disc toward the camera
   g.yz = rot(-0.8) * g.yz;
 
-  vec3 dust = position;
+  // Big Bang: every particle starts at one point and is flung outward
+  vec3 dust = position * uBang;
   vec3 pos = mix(dust, aText, a);
   pos = mix(pos, g, m);
   pos = mix(pos, dust * 2.4, s);
@@ -68,18 +70,24 @@ void main() {
   pos += curlFlow(pos * 1.3, uTime) * push * 0.35;
   pos.z += push * (aSeed.z - 0.5) * 2.0;
 
+  // White-hot at the start of the bang, cooling as it expands
+  float hot = 1.0 - smoothstep(0.0, 0.85, uBang);
+
   vec4 mv = modelViewMatrix * vec4(pos, 1.0);
   gl_Position = projectionMatrix * mv;
 
-  float size = uSize * (0.55 + aSeed.y * 0.9) * (1.0 + push * 1.5);
+  float size = uSize * (0.55 + aSeed.y * 0.9) * (1.0 + push * 1.5) * (1.0 + hot * 1.2);
   gl_PointSize = size * uPixelRatio * (8.0 / -mv.z);
 
   // ~12% of particles carry the signal colour; cursor heats the rest
   float accent = step(0.88, aSeed.z);
   vHeat = push;
   vColor = mix(uPaper, uSignal, clamp(accent + push * 0.85 + m * 0.18, 0.0, 1.0));
+  vColor = mix(vColor, vec3(1.0, 0.96, 0.9) * 1.8, hot);
   // Fade particles that get close to the lens so fly-throughs stay clean
   vAlpha = mix(0.35, 1.0, a) * (1.0 - s * 0.85) * smoothstep(0.6, 4.5, -mv.z);
+  // Keep the singularity from blowing the whole frame out to white
+  vAlpha *= mix(0.05, 1.0, smoothstep(0.0, 0.25, uBang));
 }
 `;
 
