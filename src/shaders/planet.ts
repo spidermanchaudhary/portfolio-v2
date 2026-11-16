@@ -10,10 +10,12 @@ varying vec3 vNormal;
 varying vec3 vView;
 varying vec2 vUv;
 varying vec3 vPos;
+varying float vDist;
 void main() {
   vUv = uv;
   vPos = position;
   vec4 wp = modelMatrix * vec4(position, 1.0);
+  vDist = distance(cameraPosition, wp.xyz);
   vNormal = normalize(mat3(modelMatrix) * normal);
   vView = normalize(cameraPosition - wp.xyz);
   gl_Position = projectionMatrix * viewMatrix * wp;
@@ -30,6 +32,7 @@ varying vec3 vNormal;
 varying vec3 vView;
 varying vec2 vUv;
 varying vec3 vPos;
+varying float vDist;
 
 float gridLine(float coord, float count, float width) {
   float x = coord * count;
@@ -54,6 +57,8 @@ void main() {
   vec3 col = uBody * (0.18 + lambert * 0.55);
   col += uInk * ink;
   col += uInk * fres * (0.35 + uImpact * 0.6);
+  // Distance falloff: far worlds read as dim silhouettes (fog-like)
+  col *= mix(0.12, 1.0, smoothstep(75.0, 28.0, vDist));
   gl_FragColor = vec4(col, 1.0);
 }`;
 
@@ -61,10 +66,12 @@ void main() {
 export const atmosphereVertex = /* glsl */ `
 varying vec3 vNormal;
 varying vec3 vView;
+varying float vDist;
 void main() {
   vec4 wp = modelMatrix * vec4(position, 1.0);
   vNormal = normalize(mat3(modelMatrix) * normal);
   vView = normalize(cameraPosition - wp.xyz);
+  vDist = distance(cameraPosition, wp.xyz);
   gl_Position = projectionMatrix * viewMatrix * wp;
 }`;
 
@@ -73,7 +80,9 @@ uniform vec3 uColor;
 uniform float uIntensity;
 varying vec3 vNormal;
 varying vec3 vView;
+varying float vDist;
 void main() {
   float rim = pow(clamp(1.0 - abs(dot(normalize(vNormal), vView)), 0.0, 1.0), 3.0);
-  gl_FragColor = vec4(uColor * rim * uIntensity, rim * uIntensity);
+  float far = mix(0.08, 1.0, smoothstep(75.0, 28.0, vDist));
+  gl_FragColor = vec4(uColor * rim * uIntensity * far, rim * uIntensity * far);
 }`;
