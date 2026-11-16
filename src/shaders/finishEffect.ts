@@ -13,6 +13,7 @@ import { hashGLSL } from "./curl";
  */
 const fragment = /* glsl */ `
 uniform float uVelocity;
+uniform float uWarp;
 uniform float uAberration;
 uniform float uGrain;
 uniform float uTime;
@@ -40,13 +41,24 @@ void mainImage(const in vec4 inputColor, const in vec2 uv0, out vec4 outputColor
   vec2 c = uv0 - 0.5;
   float dist = length(c);
   vec2 dir = c / max(dist, 1e-4);
-  float amt = (uAberration + abs(uVelocity) * 0.012) * dist;
+  float amt = (uAberration + abs(uVelocity) * 0.012 + uWarp * 0.02) * dist;
   // Aberration leans toward the cursor slightly — "cursor-reactive lens"
   vec2 lean = (uMouse * 0.5) * 0.002;
   vec3 col;
   col.r = texture2D(inputBuffer, uv + dir * amt + lean).r;
   col.g = texture2D(inputBuffer, uv).g;
   col.b = texture2D(inputBuffer, uv - dir * amt - lean).b;
+
+  // Hyperspace zoom blur: smear toward the centre while warping
+  if (uWarp > 0.01) {
+    vec3 acc = col;
+    for (int i = 1; i < 10; i++) {
+      float f = float(i) / 10.0;
+      acc += texture2D(inputBuffer, mix(uv, vec2(0.5), f * 0.22 * uWarp)).rgb;
+    }
+    col = mix(col, acc / 10.0, uWarp);
+    col += vec3(0.55, 0.62, 1.0) * uWarp * uWarp * 0.25 * (1.0 - dist);
+  }
 
   // Vignette
   col *= mix(1.0, smoothstep(0.95, 0.25, dist), 0.55);
@@ -76,6 +88,7 @@ export class FinishEffect extends Effect {
       attributes: EffectAttribute.CONVOLUTION,
       uniforms: new Map<string, Uniform>([
         ["uVelocity", new Uniform(0)],
+        ["uWarp", new Uniform(0)],
         ["uAberration", new Uniform(0.0025)],
         ["uGrain", new Uniform(0.032)],
         ["uTime", new Uniform(0)],

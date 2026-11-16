@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUniverse } from "@/store/universe";
+import { startWarp, WARP_CHARGE } from "@/lib/warp";
 
 /**
  * Link to a project page. With WebGL on, the HTML dissolves and the camera
@@ -26,11 +27,11 @@ export default function ProjectLink({
     const { webgl, reducedMotion, set } = useUniverse.getState();
     if (!webgl || reducedMotion || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
+    // Hyperspace jump: charge up, swap the route at the peak, land
+    startWarp();
     set({ focusSlug: slug });
     document.documentElement.dataset.transition = "in";
-    window.setTimeout(() => {
-      router.push(href, { scroll: false });
-    }, 750);
+    window.setTimeout(() => router.push(href, { scroll: false }), WARP_CHARGE * 1000);
   };
 
   return (

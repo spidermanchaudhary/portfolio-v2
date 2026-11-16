@@ -81,6 +81,8 @@ export const flight = {
   pointer: { x: 0, y: -3 },
   /** Device tilt from gyroscope (-1..1), 0 when unavailable */
   tilt: { x: 0, y: 0 },
+  /** performance.now()/1000 when the last hyperspace jump began; <0 = none */
+  warpAt: -1,
   /** Contact form completion 0..1 — lights the gantry lamps */
   fuel: 0,
   /** performance.now()/1000 when the contact form last launched; <0 = never */

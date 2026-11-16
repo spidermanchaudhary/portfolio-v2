@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUniverse } from "@/store/universe";
+import { startWarp, WARP_CHARGE } from "@/lib/warp";
 
 /**
  * Leave a project: release camera focus (it eases back onto the track),
@@ -18,8 +19,12 @@ export default function BackToUniverse({ slug }: { slug: string }) {
       onClick={(e) => {
         if (e.metaKey || e.ctrlKey) return;
         e.preventDefault();
-        useUniverse.getState().set({ focusSlug: null });
-        router.push(href, { scroll: false });
+        startWarp();
+        document.documentElement.dataset.transition = "in";
+        window.setTimeout(() => {
+          useUniverse.getState().set({ focusSlug: null });
+          router.push(href, { scroll: false });
+        }, WARP_CHARGE * 1000);
       }}
       className="group inline-flex items-center gap-3 font-mono text-micro uppercase text-dust hover:text-paper"
     >

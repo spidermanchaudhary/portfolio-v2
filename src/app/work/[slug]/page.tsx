@@ -72,7 +72,7 @@ export default async function WorkPage({ params }: Params) {
             Project {index + 1} of {projects.length}
             {host && <span className="text-faint">· {host}</span>}
           </p>
-          <h1 id="dossier-title" className="font-display text-d-1 font-extrabold uppercase wdth-cond" data-split>
+          <h1 id="dossier-title" className="font-display text-d-1 font-extrabold uppercase wdth-cond text-balance break-words" data-split>
             {project.name}
           </h1>
           <p className="mt-6 max-w-lg text-xl leading-snug text-paper/85 text-pretty" data-reveal>

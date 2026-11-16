@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { flight, useUniverse } from "@/store/universe";
 import { buildCurves, tToU, type Station } from "./track";
 import { useUniverseData } from "@/hooks/useUniverseData";
+import { warpAmount } from "@/lib/warp";
 
 const desiredPos = new THREE.Vector3();
 const desiredLook = new THREE.Vector3();
@@ -65,6 +66,16 @@ export default function CameraRig({ stations }: { stations: Station[] }) {
     const py = flight.pointer.y < -1.5 ? 0 : flight.pointer.y;
     desiredPos.x += px * 0.32 + flight.tilt.x * 0.6;
     desiredPos.y += py * 0.18 + flight.tilt.y * 0.4;
+
+    // Hyperspace: widen the lens and race to the target
+    const w = warpAmount();
+    lambda += w * 9;
+    const cam = camera as THREE.PerspectiveCamera;
+    const fov = 42 + w * 38;
+    if (Math.abs(cam.fov - fov) > 0.01) {
+      cam.fov = fov;
+      cam.updateProjectionMatrix();
+    }
 
     const k = 1 - Math.exp(-lambda * dt);
     camera.position.lerp(desiredPos, k);
