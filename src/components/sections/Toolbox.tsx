@@ -1,8 +1,11 @@
 import type { Skill } from "@/data/types";
 
+/** Logos drawn in white — they get a dark chip instead of the paper one */
+const LIGHT_LOGOS = new Set(["github"]);
+
 /**
- * Toolbox — skills as an asteroid belt the camera flies through. In HTML
- * they're a typographic run, not a card grid.
+ * Toolbox — skills as a typographic run with full-colour logos, not a
+ * card grid.
  */
 export default function Toolbox({ skills }: { skills: Skill[] }) {
   return (
@@ -10,7 +13,7 @@ export default function Toolbox({ skills }: { skills: Skill[] }) {
       id="toolbox"
       data-station="toolbox"
       aria-labelledby="toolbox-title"
-      className="relative flex min-h-[150vh] items-center px-5 sm:px-8 lg:px-12"
+      className="relative flex min-h-[110vh] items-center px-5 sm:px-8 lg:px-12"
     >
       <div className="w-full">
         <p className="label mb-4" data-reveal>
@@ -25,17 +28,18 @@ export default function Toolbox({ skills }: { skills: Skill[] }) {
               key={skill.id}
               data-reveal
               data-sfx="tick"
-              className="group inline-flex items-baseline gap-[0.35em] text-paper/90 transition-colors duration-300 hover:text-signal-hi"
+              className="group inline-flex items-baseline gap-[0.35em] text-paper/90 transition-colors duration-300 hover:text-paper"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={skill.image}
-                alt=""
-                width={28}
-                height={28}
-                loading="lazy"
-                className="h-[0.6em] w-[0.6em] translate-y-[0.05em] object-contain opacity-70 grayscale transition duration-300 group-hover:opacity-100 group-hover:grayscale-0"
-              />
+              {/* Chip behind each logo so every one reads in full colour on the dark page */}
+              <span
+                aria-hidden
+                className={`inline-flex h-[0.78em] w-[0.78em] translate-y-[0.08em] items-center justify-center rounded-[0.18em] p-[0.1em] transition-transform duration-300 ease-out-expo group-hover:-rotate-6 group-hover:scale-110 ${
+                  LIGHT_LOGOS.has(skill.name.toLowerCase()) ? "bg-[#24292f]" : "bg-paper"
+                }`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={skill.image} alt="" width={40} height={40} loading="lazy" className="h-full w-full object-contain" />
+              </span>
               <span>{skill.name}</span>
               {i < skills.length - 1 && (
                 <span aria-hidden className="font-light text-faint">

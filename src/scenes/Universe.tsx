@@ -71,7 +71,7 @@ export default function Universe() {
 }
 
 function Scene() {
-  const { projects, skills } = useUniverseData();
+  const { projects } = useUniverseData();
   const size = useThree((s) => s.size);
   const aspect = size.width / size.height;
   const wide = aspect >= 1.1;
@@ -88,7 +88,7 @@ function Scene() {
       <Starfield />
       <HeroField />
       <Suspense fallback={null}>
-        <Landmarks stations={stations} skills={skills} />
+        <Landmarks stations={stations} />
       </Suspense>
       <Post />
       <FirstFrame />

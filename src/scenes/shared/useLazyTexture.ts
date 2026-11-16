@@ -32,8 +32,3 @@ export function useLazyTexture(url: string | null, srgb = true) {
   }, [url, srgb]);
   return tex;
 }
-
-/** Ask Cloudinary for a small PNG (also rasterises SVG logos). */
-export function cloudinaryPng(url: string, size = 128) {
-  return url.includes("/image/upload/") ? url.replace("/image/upload/", `/image/upload/f_png,w_${size},h_${size},c_fit/`) : url;
-}
