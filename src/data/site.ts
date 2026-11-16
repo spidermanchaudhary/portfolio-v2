@@ -63,12 +63,12 @@ export const site = {
 } as const;
 
 export const sections: Section[] = [
-  { id: "top", label: "Launchpad", hint: "Back to the start" },
-  { id: "origin", label: "Origin", hint: "Where Sujal comes from" },
-  { id: "toolbox", label: "Toolbox", hint: "The everyday stack" },
+  { id: "top", label: "Home", hint: "Back to the start" },
+  { id: "origin", label: "About", hint: "Background, education, interests" },
+  { id: "toolbox", label: "Skills", hint: "The everyday stack" },
   { id: "work", label: "Work", hint: "Products shipped into the wild" },
-  { id: "signals", label: "Signals", hint: "Notes from people" },
-  { id: "launch", label: "Launch", hint: "Start a conversation" },
+  { id: "signals", label: "Reviews", hint: "Notes from people" },
+  { id: "launch", label: "Contact", hint: "Start a conversation" },
 ];
 
 /** Short links resolve through the existing /[slug] redirect route. */
