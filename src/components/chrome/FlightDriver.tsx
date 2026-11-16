@@ -6,6 +6,7 @@ import Lenis from "lenis";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { flight, useUniverse } from "@/store/universe";
+import { landWarp } from "@/lib/warp";
 import { sections } from "@/data/site";
 import type { SectionId } from "@/data/types";
 
@@ -103,21 +104,37 @@ export default function FlightDriver() {
       if (useUniverse.getState().activeSection !== active) set({ activeSection: active });
     };
 
-    // Arriving at /#world-x from a dossier: jump there before first paint
-    const hash = window.location.hash;
-    if (hash) {
-      const el = document.querySelector<HTMLElement>(hash);
+    // Route arrived. If it carries a #hash (back from a project), jump there
+    // first — after telling Lenis the page height changed, or it clamps the
+    // scroll to the previous (shorter) page. Then finish any warp in
+    // progress and reveal the page, so the jump lands on the right spot.
+    let raf = 0;
+    let tries = 0;
+    const arrive = () => {
+      const hash = window.location.hash;
+      const el = hash ? document.querySelector<HTMLElement>(hash) : null;
+      if (hash && !el && tries++ < 20) {
+        raf = requestAnimationFrame(arrive);
+        return;
+      }
+      window.__lenis?.resize();
       if (el) {
         const top = el.getBoundingClientRect().top + window.scrollY + el.offsetHeight / 2 - window.innerHeight / 2;
-        window.__lenis ? window.__lenis.scrollTo(top, { immediate: true, force: true }) : window.scrollTo(0, top);
+        if (window.__lenis) window.__lenis.scrollTo(top, { immediate: true, force: true });
+        window.scrollTo(0, top);
       }
-    }
+      measure();
+      if (flight.warpHold) landWarp();
+      delete document.documentElement.dataset.transition;
+    };
+    arrive();
 
     measure();
     const ro = new ResizeObserver(() => measure());
     ro.observe(document.body);
     window.addEventListener("scroll", update, { passive: true });
     return () => {
+      cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener("scroll", update);
     };

@@ -7,8 +7,6 @@ import { flight, useUniverse } from "@/store/universe";
 import { palette } from "@/lib/palette";
 import { warpAmount } from "@/lib/warp";
 
-const fwd = new THREE.Vector3();
-
 const STARS = { high: 9000, medium: 6000, low: 3500 } as const;
 
 /** Volume the stars fill — wraps the whole flight path */
@@ -142,7 +140,7 @@ export default function Starfield() {
     []
   );
 
-  useFrame(({ gl, camera }, dt) => {
+  useFrame(({ gl }, dt) => {
     starMat.uniforms.uTime.value += dt;
     starMat.uniforms.uPixelRatio.value = gl.getPixelRatio();
     // Streaks trail opposite the camera's motion — forward flight smears
@@ -150,16 +148,9 @@ export default function Starfield() {
     const { x, y, z } = flight.vel;
     const speed = Math.hypot(x, y, z);
     const len = THREE.MathUtils.clamp(speed * 0.09, 0, 9);
-    const w = warpAmount();
-    if (w > 0.02) {
-      // Hyperspace: every streak points back along the view axis
-      camera.getWorldDirection(fwd);
-      streakMat.uniforms.uStreak.value.copy(fwd).multiplyScalar(-(len + w * 26));
-      streakMat.uniforms.uOpacity.value = Math.max(THREE.MathUtils.smoothstep(len, 0.4, 3.5) * 0.55, w * 0.95);
-    } else {
-      if (speed > 1e-3) streakMat.uniforms.uStreak.value.set(x, y, z).multiplyScalar(-len / speed);
-      streakMat.uniforms.uOpacity.value = THREE.MathUtils.smoothstep(len, 0.4, 3.5) * 0.55;
-    }
+    if (speed > 1e-3) streakMat.uniforms.uStreak.value.set(x, y, z).multiplyScalar(-len / speed);
+    // Hidden during a jump — the hyperspace tunnel owns the streaks then
+    streakMat.uniforms.uOpacity.value = THREE.MathUtils.smoothstep(len, 0.4, 3.5) * 0.55 * (1 - warpAmount());
   });
 
   return (

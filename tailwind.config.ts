@@ -29,7 +29,7 @@ export default {
       fontSize: {
         // Fluid display scale, clamp(min, preferred, max)
         "d-1": ["clamp(3.25rem, 11.5vw, 13rem)", { lineHeight: "0.9", letterSpacing: "-0.012em" }],
-        "d-2": ["clamp(2.5rem, 7vw, 7.5rem)", { lineHeight: "0.9", letterSpacing: "-0.035em" }],
+        "d-2": ["clamp(2.5rem, 7vw, 7.5rem)", { lineHeight: "0.92", letterSpacing: "-0.015em" }],
         "d-3": ["clamp(1.9rem, 4vw, 3.75rem)", { lineHeight: "0.98", letterSpacing: "-0.025em" }],
         micro: ["0.6875rem", { lineHeight: "1rem", letterSpacing: "0.18em" }],
       },

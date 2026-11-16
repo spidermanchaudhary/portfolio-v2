@@ -71,7 +71,7 @@ export default function CameraRig({ stations }: { stations: Station[] }) {
     const w = warpAmount();
     lambda += w * 9;
     const cam = camera as THREE.PerspectiveCamera;
-    const fov = 42 + w * 38;
+    const fov = 42 + w * 24;
     if (Math.abs(cam.fov - fov) > 0.01) {
       cam.fov = fov;
       cam.updateProjectionMatrix();

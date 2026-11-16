@@ -16,6 +16,7 @@ import Post from "./Post";
 import Landmarks from "./landmarks/Landmarks";
 import FpsProbe from "./FpsProbe";
 import CursorLight from "./CursorLight";
+import HyperTunnel from "./HyperTunnel";
 
 const TIERS: Quality[] = ["low", "medium", "high"];
 
@@ -86,6 +87,7 @@ function Scene() {
       <CursorLight />
       <CameraRig stations={stations} />
       <Starfield />
+      <HyperTunnel />
       <HeroField />
       <Suspense fallback={null}>
         <Landmarks stations={stations} />
