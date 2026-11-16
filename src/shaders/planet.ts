@@ -58,7 +58,7 @@ void main() {
   col += uInk * ink;
   col += uInk * fres * (0.35 + uImpact * 0.6);
   // Distance falloff: far worlds read as dim silhouettes (fog-like)
-  col *= mix(0.12, 1.0, smoothstep(75.0, 28.0, vDist));
+  col *= mix(0.06, 1.0, smoothstep(50.0, 22.0, vDist));
   gl_FragColor = vec4(col, 1.0);
 }`;
 
@@ -83,6 +83,6 @@ varying vec3 vView;
 varying float vDist;
 void main() {
   float rim = pow(clamp(1.0 - abs(dot(normalize(vNormal), vView)), 0.0, 1.0), 3.0);
-  float far = mix(0.08, 1.0, smoothstep(75.0, 28.0, vDist));
+  float far = mix(0.04, 1.0, smoothstep(50.0, 22.0, vDist));
   gl_FragColor = vec4(uColor * rim * uIntensity * far, rim * uIntensity * far);
 }`;
