@@ -2,7 +2,7 @@ import * as THREE from "three";
 import type { Project } from "@/data/types";
 import { origin } from "@/data/origin";
 
-export type StationKind = "hero" | "origin" | "toolbox" | "project" | "signals" | "launch";
+export type StationKind = "hero" | "origin" | "toolbox" | "blackhole" | "project" | "signals" | "launch";
 
 export interface Station {
   /** Matches the `data-station` attribute on the HTML chapter */
@@ -90,6 +90,10 @@ export function buildTrack(projects: Project[], aspect: number): Station[] {
     side: 0,
   });
 
+  // Black hole: a set piece behind the Work intro, far off to the side so
+  // the camera passes it rather than through it
+  push({ key: "work-intro", kind: "blackhole", index: 0, anchor: v(8, 3.2, -138), scale: 1, side: 1 }, 33, 7.5, 0.4);
+
   // Projects: a gentle weave through open space — the screenshots live in
   // the HTML; the camera just keeps the starfield moving behind them
   projects.forEach((p, i) => {
@@ -100,7 +104,7 @@ export function buildTrack(projects: Project[], aspect: number): Station[] {
         key: `project-${i}`,
         kind: "project",
         index: i,
-        anchor: v(side * 3.1, Math.sin(i * 1.3) * 1.1, -128 - i * 34),
+        anchor: v(side * 3.1, Math.sin(i * 1.3) * 1.1, -154 - i * 34),
         scale,
         side,
       },

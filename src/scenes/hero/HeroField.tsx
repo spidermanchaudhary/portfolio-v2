@@ -36,7 +36,8 @@ export default function HeroField() {
 
   const geometry = useMemo(() => {
     const count = initialCount.current;
-    const nameY = aspect >= 1 ? 0.55 : 1.4;
+    // Sit in the upper half, clear of the HTML headline below it
+    const nameY = aspect >= 1 ? 1.75 : 1.4;
     const f = buildField(count, site.firstName.toUpperCase(), aspect, nameY);
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.BufferAttribute(f.dust, 3));

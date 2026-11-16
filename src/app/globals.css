@@ -204,3 +204,10 @@ html[data-transition="in"] main {
   opacity: 0;
   filter: blur(6px);
 }
+
+/* Origin photos: inline on phones / lite mode; in 3D on wide screens */
+@media (min-aspect-ratio: 11/10) {
+  html:not(.lite) .origin-photo {
+    display: none;
+  }
+}

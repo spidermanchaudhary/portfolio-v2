@@ -19,7 +19,7 @@ export function hostOf(url: string) {
 export default function Work({ projects }: { projects: Project[] }) {
   return (
     <section id="work" aria-labelledby="work-title" className="relative">
-      <header className="flex min-h-[70vh] items-end px-5 pb-16 sm:px-8 lg:px-12">
+      <header data-station="work-intro" className="flex min-h-[100vh] items-end px-5 pb-16 sm:px-8 lg:px-12">
         <div className="max-w-4xl">
           <p className="label mb-4" data-reveal>
             Work · {projects.length} shipped

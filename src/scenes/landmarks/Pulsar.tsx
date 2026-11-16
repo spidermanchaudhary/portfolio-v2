@@ -66,7 +66,9 @@ export default function Pulsar({ station, trackIndex }: { station: Station; trac
     act.current = damp(act.current, activity(trackIndex, 1.2), 3, dt);
     const t = state.clock.elapsedTime;
     if (spinner.current) spinner.current.rotation.z = t * 1.6;
-    beamMat.uniforms.uIntensity.value = 0.25 + act.current * 0.55;
+    // Phones: text spans the full width, so the beams stay faint behind it
+    const wide = state.size.width / state.size.height >= 1.1;
+    beamMat.uniforms.uIntensity.value = (0.25 + act.current * 0.55) * (wide ? 1 : 0.3);
   });
 
   return (

@@ -36,7 +36,7 @@ function sampleGlyphs(text: string, aspect: number) {
     }
   }
   // World-space width of the word: wide screens get a bigger name
-  const worldWidth = aspect >= 1 ? Math.min(11.5, 6.8 * aspect) : 6.4 * aspect + 0.6;
+  const worldWidth = aspect >= 1 ? Math.min(10.5, 6.4 * aspect) : 6.4 * aspect + 0.6;
   const scale = worldWidth / W;
   return { pts, W, H, scale };
 }

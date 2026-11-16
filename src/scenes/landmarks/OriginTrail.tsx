@@ -94,8 +94,10 @@ export default function OriginTrail({ stations }: { stations: Station[] }) {
   }, [beacons, toolbox]);
 
   const trail = useRef<THREE.Points>(null);
-  useFrame(({ gl }, dt) => {
+  useFrame(({ gl, size }, dt) => {
     mat.uniforms.uTime.value += dt;
+    // Phones: the trail crosses full-width text, so keep it faint
+    mat.uniforms.uColor.value.set(palette.signalHi).multiplyScalar(size.width / size.height >= 1.1 ? 1 : 0.35);
     mat.uniforms.uPixelRatio.value = gl.getPixelRatio();
     // Only once the galaxy has unravelled, and gone before the belt
     if (trail.current) trail.current.visible = flight.t > 0.9 && flight.t < firstIdx + beacons.length + 0.6 && !useUniverse.getState().focusSlug;
@@ -138,7 +140,10 @@ function Beacon({ station, trackIndex, texture }: { station: Station; trackIndex
 
 
   useFrame((state, dt) => {
-    const near = isNear(trackIndex, 1.7);
+    // Tall (phone) screens: the HTML shows the photo inline instead — a 3D
+    // photo there would sit on top of the text
+    const wide = state.size.width / state.size.height >= 1.1;
+    const near = wide && isNear(trackIndex, 1.7);
     if (group.current) group.current.visible = near;
     if (!near) return;
     act.current = damp(act.current, activity(trackIndex, 0.9), 3, dt);

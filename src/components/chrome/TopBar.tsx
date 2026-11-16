@@ -12,7 +12,7 @@ export default function TopBar() {
   const set = useUniverse((s) => s.set);
 
   return (
-    <header className="pointer-events-none fixed inset-x-0 top-0 z-[80] flex items-start justify-between p-4 sm:p-6">
+    <header className="pointer-events-none fixed inset-x-0 top-0 z-[80] flex items-start justify-between bg-gradient-to-b from-void via-void/70 to-transparent p-4 pb-8 sm:bg-none sm:p-6">
       <Link
         href="/"
         data-cursor="button"
