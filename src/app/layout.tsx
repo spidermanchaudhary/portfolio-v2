@@ -1,87 +1,78 @@
-import type { Metadata } from "next";
-import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Bricolage_Grotesque, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import Effects from "@/components/Effects";
+import { site } from "@/data/site";
+import { getProjects, getSkills } from "@/data/load";
+import Shell from "@/components/Shell";
+import { bootScript } from "@/lib/capabilities";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const bricolage = Bricolage_Grotesque({
+const display = Bricolage_Grotesque({
   variable: "--font-display",
   subsets: ["latin"],
+  axes: ["opsz", "wdth"],
+  display: "swap",
+});
+
+const mono = Geist_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Sujal Chaudhary - NSUT",
-  description: "Portfolio of Sujal Chaudhary, a Full Stack Web Developer with expertise in HTML, CSS, JavaScript, React, PHP, Nextjs and more. From NSUT. Explore my projects and get in touch.",
-  keywords: "Sujal Chaudhary, NSUT, Full Stack Developer, Web Developer, Next.js, React, PHP, HTML, CSS, JavaScript, MERN Stack, Developer, Portfolio, Projects, Contact",
-  icons:{
-    icon:"https://sdrive.blr1.cdn.digitaloceanspaces.com/files/4cfb797bd42593aaf2b981960f6966d3.gif"
+  metadataBase: new URL(site.url),
+  title: { default: site.seo.title, template: `%s — ${site.name}` },
+  description: site.seo.description,
+  keywords: [...site.seo.keywords],
+  authors: [{ name: site.name, url: site.url }],
+  creator: site.name,
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: site.seo.title,
+    description: site.seo.description,
+    url: site.url,
+    siteName: site.name,
+    type: "website",
+    locale: "en_IN",
   },
-  openGraph:{
-    title:"Sujal Chaudhary - NSUT",
-    description:"Portfolio of Sujal Chaudhary, a Full Stack Web Developer with expertise in HTML, CSS, JavaScript, React, PHP, Nextjs and more. From NSUT. Explore my projects and get in touch.",
-    url:"https://sujal.info",
-    type:"website",
-    images:[
-      {
-        url:"https://sdrive.blr1.cdn.digitaloceanspaces.com/files/100a7d9705614a6a607a0fc19b76628e.png",
-        width:1130,
-        height:566,
-        alt:"Sujal Chaudhary - NSUT"
-      }
-    ]
+  twitter: {
+    card: "summary_large_image",
+    title: site.seo.title,
+    description: site.seo.description,
   },
-  twitter:{
-    card:"summary_large_image",
-    title:"Sujal Chaudhary - NSUT",
-    description:"Portfolio of Sujal Chaudhary, a Full Stack Web Developer with expertise in HTML, CSS, JavaScript, React, PHP, Nextjs and more. From NSUT. Explore my projects and get in touch.",
-    images:[
-      {
-        url:"https://sdrive.blr1.cdn.digitaloceanspaces.com/files/100a7d9705614a6a607a0fc19b76628e.png",
-        width:1130,
-        height:566,
-        alt:"Sujal Chaudhary - NSUT"
-      }
-    ]
-  },
-  robots:"index,follow",
+  robots: { index: true, follow: true },
 };
 
-export default function RootLayout({
+export const viewport: Viewport = {
+  themeColor: "#08080A",
+  colorScheme: "dark",
+  width: "device-width",
+  initialScale: 1,
+};
+
+export default async function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
+  // Fetched once (ISR-cached); the persistent 3D universe needs the same
+  // data as the page so the flight path lines up with the HTML chapters.
+  const [projects, skills] = await Promise.all([getProjects(), getSkills()]);
+
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${bricolage.variable} text-ink antialiased`}
-      >
+    <html lang="en" className={`${display.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Classifies the device before first paint (lite / touch / rebooted) */}
+        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
+      </head>
+      <body className="bg-void font-sans text-paper antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[300] focus:bg-blue focus:px-4 focus:py-2 focus:font-mono focus:text-xs focus:uppercase focus:tracking-widest focus:text-paper"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[300] focus:bg-signal focus:px-4 focus:py-2 focus:font-mono focus:text-micro focus:uppercase focus:text-paper"
         >
           Skip to content
         </a>
-        {/* Notebook margin rule */}
-        <div
-          aria-hidden
-          className="pointer-events-none fixed bottom-0 left-10 top-0 z-0 hidden w-[2px] bg-red/25 xl:block"
-        />
-        <Effects />
-        <Navbar />
-        <main id="main">{children}</main>
-        <Footer />
+        <Shell projects={projects} skills={skills}>
+          {children}
+        </Shell>
       </body>
     </html>
   );
