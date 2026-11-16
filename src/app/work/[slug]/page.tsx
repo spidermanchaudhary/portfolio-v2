@@ -83,8 +83,8 @@ export default async function WorkPage({ params }: Params) {
         <div className="col-span-12 space-y-10 lg:col-span-5 lg:col-start-8 lg:pt-24">
           {project.metrics.length > 0 && (
             <dl className="grid grid-cols-2 gap-px border border-line bg-line" data-reveal>
-              {project.metrics.map((m) => (
-                <div key={m.label} className="flex flex-col-reverse bg-void/85 px-4 py-3 backdrop-blur">
+              {project.metrics.map((m, mi) => (
+                <div key={m.label} className={`${project.metrics.length % 2 && mi === project.metrics.length - 1 ? "col-span-2 " : ""}flex flex-col-reverse bg-void/85 px-4 py-3 backdrop-blur`}>
                   <dt className="label">{m.label}</dt>
                   <dd className="font-display text-3xl font-bold tracking-tight text-signal-hi">{m.value}</dd>
                 </div>

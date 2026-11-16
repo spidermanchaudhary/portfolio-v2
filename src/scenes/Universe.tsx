@@ -16,6 +16,7 @@ import Post from "./Post";
 import Worlds from "./worlds/Worlds";
 import Landmarks from "./landmarks/Landmarks";
 import FpsProbe from "./FpsProbe";
+import CursorLight from "./CursorLight";
 
 const TIERS: Quality[] = ["low", "medium", "high"];
 
@@ -82,6 +83,8 @@ function Scene() {
     <>
       <fog attach="fog" args={[palette.void, 26, 95]} />
       <ambientLight intensity={0.25} />
+      <directionalLight position={[-6, 8, 6]} intensity={1.4} color={palette.paper} />
+      <CursorLight />
       <CameraRig stations={stations} />
       <Starfield />
       <HeroField />

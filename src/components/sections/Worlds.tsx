@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Project } from "@/data/types";
 import { cn } from "@/lib/utils";
 import WorldLink from "@/components/ui/WorldLink";
@@ -78,8 +79,8 @@ function WorldChapter({ project, index }: { project: Project; index: number }) {
 
           {project.metrics.length > 0 && (
             <dl className="mt-8 grid max-w-md grid-cols-2 gap-px border border-line bg-line" data-reveal>
-              {project.metrics.map((m) => (
-                <div key={m.label} className="flex flex-col-reverse bg-void/85 px-4 py-3">
+              {project.metrics.map((m, mi) => (
+                <div key={m.label} className={`${project.metrics.length % 2 && mi === project.metrics.length - 1 ? "col-span-2 " : ""}flex flex-col-reverse bg-void/85 px-4 py-3`}>
                   <dt className="label">{m.label}</dt>
                   <dd className="font-display text-2xl font-bold tracking-tight text-signal-hi">
                     {m.value}
@@ -131,6 +132,18 @@ function WorldChapter({ project, index }: { project: Project; index: number }) {
               </a>
             )}
           </div>
+
+          {/* Lite mode: the screenshot stands in for the 3D world */}
+          <figure className="lite-only ticks mt-10 max-w-md border border-line p-1.5">
+            <Image
+              src={project.thumbnail}
+              alt={`${project.name} screenshot`}
+              width={1280}
+              height={720}
+              sizes="(min-width: 1024px) 34vw, 92vw"
+              className="aspect-video w-full object-cover object-top"
+            />
+          </figure>
 
           <p className="mt-10 max-w-md border-l border-signal/60 pl-4 font-mono text-[0.72rem] leading-5 text-dust">
             <span className="text-signal-hi">in view —</span> {project.world.caption}

@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { flight, useUniverse } from "@/store/universe";
 import { buildCurves, tToU, type Station } from "./track";
 import { useUniverseData } from "@/hooks/useUniverseData";
+import { LAUNCH_SECONDS, probeAltitude } from "./landmarks/LaunchPad";
 
 const desiredPos = new THREE.Vector3();
 const desiredLook = new THREE.Vector3();
@@ -55,6 +56,19 @@ export default function CameraRig({ stations }: { stations: Station[] }) {
       curves.cam.getPoint(u, desiredPos);
       curves.look.getPoint(u, desiredLook);
       orbit.current = 0;
+
+      // Contact launch: tilt up and follow the probe for a few seconds
+      if (flight.launchAt > 0 && flight.t > n - 1.6) {
+        const since = performance.now() / 1000 - flight.launchAt;
+        if (since >= 0 && since < LAUNCH_SECONDS + 2) {
+          const climb = Math.min(probeAltitude(since), 14);
+          const ease = since < LAUNCH_SECONDS ? 1 : 1 - (since - LAUNCH_SECONDS) / 2;
+          desiredLook.y += climb * 0.8 * ease;
+          desiredPos.y += climb * 0.18 * ease;
+          desiredPos.z += climb * 0.25 * ease;
+          lambda = 3;
+        }
+      }
     }
 
     // Parallax from cursor (desktop) or device tilt (mobile)

@@ -93,7 +93,7 @@ export default function Launch() {
       className="relative flex min-h-[100svh] items-center px-5 py-28 sm:px-8 lg:px-12"
     >
       <div className="grid w-full grid-cols-12 gap-x-6 gap-y-14">
-        <div className="col-span-12 lg:col-span-5">
+        <div className="col-span-12 lg:col-span-4">
           <p className="label mb-4" data-reveal>
             Launch · pre-flight checklist {doneCount}/{keys.length}
           </p>
@@ -144,7 +144,7 @@ export default function Launch() {
           onSubmit={onSubmit}
           noValidate
           aria-describedby="launch-status"
-          className="ticks col-span-12 border border-line bg-void/75 p-5 backdrop-blur-md sm:p-8 lg:col-span-6 lg:col-start-7"
+          className="ticks col-span-12 border border-line bg-void/75 p-5 backdrop-blur-md sm:p-8 lg:col-span-5 lg:col-start-8"
         >
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             {FIELDS.map((f) => (

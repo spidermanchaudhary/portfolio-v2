@@ -61,7 +61,8 @@ export default function Origin() {
                   <p className="mt-6 text-[1.0625rem] leading-relaxed text-dust text-pretty" data-reveal>
                     {chapter.body}
                   </p>
-                  <figure className="ticks mt-8 w-40 border border-line p-1.5" data-reveal>
+                  {/* Lite mode only — with WebGL on, the photo prints in 3D beside the beacon */}
+                  <figure className="lite-only ticks mt-8 w-40 border border-line p-1.5">
                     <Image
                       src={chapter.image}
                       alt=""

@@ -116,15 +116,15 @@ export function buildTrack(projects: Project[], aspect: number): Station[] {
   push({ key: "signals", kind: "signals", index: 0, anchor: v(2.2, 1.4, lastZ - 44), scale: 1, side: 1 }, 11, 1.2, 0.2);
 
   // Launch: the pad, seen from slightly below so the probe climbs into frame
-  const pad = v(2.6, -1.4, lastZ - 92);
-  const offX = wide ? -2.8 : 0;
+  // Centred: on wide screens the HTML leaves a gap between its columns
+  const pad = v(0.8, -1.4, lastZ - 92);
   stations.push({
     key: "launch",
     kind: "launch",
     index: 0,
     anchor: pad,
-    cam: v(pad.x + offX, pad.y + 0.9, pad.z + 9.5),
-    look: v(pad.x + offX, pad.y + (wide ? 1.6 : 2.6), pad.z),
+    cam: v(pad.x, pad.y + 1.1, pad.z + (wide ? 12.5 : 15)),
+    look: v(pad.x, pad.y + (wide ? 1.5 : 3.4), pad.z),
     scale: 1,
     side: 1,
   });

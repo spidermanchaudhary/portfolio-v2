@@ -40,6 +40,8 @@ export interface OriginChapter {
   title: string;
   subtitle?: string;
   image: string;
+  /** Small (512px) copy used as a WebGL texture */
+  texture: string;
   body: string;
 }
 
