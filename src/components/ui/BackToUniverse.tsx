@@ -15,7 +15,6 @@ export default function BackToUniverse({ slug }: { slug: string }) {
     <Link
       href={href}
       data-cursor="button"
-      data-sfx="back"
       onClick={(e) => {
         if (e.metaKey || e.ctrlKey) return;
         e.preventDefault();

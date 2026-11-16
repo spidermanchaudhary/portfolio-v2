@@ -34,7 +34,7 @@ export default function ProjectLink({
   };
 
   return (
-    <Link href={href} onClick={onClick} data-cursor="scan" data-sfx="enter" className={className}>
+    <Link href={href} onClick={onClick} data-cursor="scan" className={className}>
       {children}
     </Link>
   );

@@ -27,7 +27,6 @@ export default function Toolbox({ skills }: { skills: Skill[] }) {
             <li
               key={skill.id}
               data-reveal
-              data-sfx="tick"
               className="group inline-flex items-baseline gap-[0.35em] text-paper/90 transition-colors duration-300 hover:text-paper"
             >
               {/* Chip behind each logo so every one reads in full colour on the dark page */}

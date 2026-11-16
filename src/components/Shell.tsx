@@ -10,7 +10,6 @@ import TopBar from "./chrome/TopBar";
 import Loader from "./chrome/Loader";
 import FlightDriver from "./chrome/FlightDriver";
 import RevealDirector from "./chrome/RevealDirector";
-import AudioDirector from "./chrome/AudioDirector";
 import SceneBoundary from "./SceneBoundary";
 
 // three.js + R3F + postprocessing live in their own chunk, fetched after
@@ -70,7 +69,6 @@ export default function Shell({
       <Loader />
       <FlightDriver />
       <RevealDirector />
-      <AudioDirector />
       <TopBar />
       <main id="main" className="relative z-10">
         {children}

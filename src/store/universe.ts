@@ -24,7 +24,6 @@ interface UniverseState {
   /** Quality pinned via ?q= — adaptive monitor is ignored */
   qualityLocked: boolean;
 
-  soundOn: boolean;
   showFps: boolean;
   /** Konami easter egg */
   blueprint: boolean;
@@ -51,7 +50,6 @@ export const useUniverse = create<UniverseState>((set) => ({
   isTouch: false,
   quality: "high",
   qualityLocked: false,
-  soundOn: false,
   showFps: false,
   blueprint: false,
   paletteOpen: false,

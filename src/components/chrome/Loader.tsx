@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useUniverse } from "@/store/universe";
 import { useUniverseData } from "@/hooks/useUniverseData";
 import { PARTICLES } from "@/lib/capabilities";
-import { sfx } from "@/lib/sfx";
 
 const MIN_MS = 1500;
 const MAX_MS = 4200;
@@ -60,10 +59,6 @@ export default function Loader() {
       window.removeEventListener("pointerdown", skip);
     };
   }, [phase, sceneReady, webgl, reducedMotion, set]);
-
-  useEffect(() => {
-    if (phase === "exit") sfx.ignite();
-  }, [phase]);
 
   if (phase === "gone") return null;
 

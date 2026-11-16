@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { contactDetails, site, socials } from "@/data/site";
 import { flight } from "@/store/universe";
-import { sfx } from "@/lib/sfx";
 import { cn } from "@/lib/utils";
 
 const FIELDS = [
@@ -33,7 +32,6 @@ export default function Launch() {
   const [form, setForm] = useState(EMPTY);
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [message, setMessage] = useState("");
-  const ticked = useRef(new Set<string>());
 
   const keys = Object.keys(form) as FormKey[];
   const doneCount = keys.filter((k) => isDone(k, form[k])).length;
@@ -45,22 +43,11 @@ export default function Launch() {
     if (state === "error") setState("idle");
   };
 
-  const onBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const id = e.target.id as FormKey;
-    if (isDone(id, e.target.value)) {
-      if (!ticked.current.has(id)) {
-        ticked.current.add(id);
-        sfx.tick();
-      }
-    } else ticked.current.delete(id);
-  };
-
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (keys.some((k) => form[k].trim() === "")) {
       setState("error");
       setMessage("Please fill all the fields.");
-      sfx.buzz();
       return;
     }
     setState("sending");
@@ -74,14 +61,11 @@ export default function Launch() {
       if (!res.ok) throw new Error(String(res.status));
       setState("sent");
       setMessage("Message sent successfully!");
-      sfx.ding();
       flight.launchAt = performance.now() / 1000;
       setForm(EMPTY);
-      ticked.current.clear();
     } catch {
       setState("error");
       setMessage("Failed to send the message. Please try again.");
-      sfx.buzz();
     }
   };
 
@@ -130,7 +114,6 @@ export default function Launch() {
                   target="_blank"
                   rel="noopener me"
                   data-cursor="button"
-                  data-sfx="out"
                   className="link-ink font-mono text-micro uppercase text-dust hover:text-paper"
                 >
                   {s.label} ↗
@@ -157,7 +140,6 @@ export default function Launch() {
                   placeholder={f.placeholder}
                   value={form[f.id]}
                   onChange={onChange}
-                  onBlur={onBlur}
                   required
                   className={inputCls}
                 />
@@ -172,7 +154,6 @@ export default function Launch() {
                   placeholder="Type your message here..."
                   value={form.message}
                   onChange={onChange}
-                  onBlur={onBlur}
                   required
                   className={cn(inputCls, "resize-none")}
                 />
@@ -187,7 +168,6 @@ export default function Launch() {
               disabled={state === "sending"}
               data-cursor="button"
               data-magnetic
-              data-sfx="none"
               className="group inline-flex h-12 items-center justify-center gap-3 bg-signal px-7 font-mono text-micro uppercase text-paper transition-colors hover:bg-signal-hi hover:text-void disabled:cursor-wait disabled:opacity-60"
             >
               {state === "sending" ? "Igniting…" : doneCount === keys.length ? "Launch message" : "Send message"}
@@ -255,14 +235,12 @@ function CopyButton({ value, label }: { value: string; label: string }) {
     <button
       type="button"
       data-cursor="button"
-      data-sfx="none"
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(value);
         } catch {
           return;
         }
-        sfx.scratch();
         setCopied(true);
         window.setTimeout(() => setCopied(false), 1800);
       }}

@@ -50,7 +50,6 @@ export default function Hero() {
               href="#work"
               data-cursor="button"
               data-magnetic
-              data-sfx="launch"
               className="group inline-flex h-12 items-center gap-3 bg-signal px-6 font-mono text-micro uppercase text-paper transition-colors hover:bg-signal-hi hover:text-void"
             >
               Enter the universe

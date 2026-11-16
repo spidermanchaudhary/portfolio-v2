@@ -138,7 +138,6 @@ function ProjectChapter({ project, index }: { project: Project; index: number })
                 target="_blank"
                 rel="noopener"
                 data-cursor="button"
-                data-sfx="out"
                 className="inline-flex h-11 items-center border border-line px-4 font-mono text-micro uppercase text-paper transition-colors hover:border-paper"
               >
                 Visit live ↗<span className="sr-only"> (opens {project.name} in a new tab)</span>
@@ -150,7 +149,6 @@ function ProjectChapter({ project, index }: { project: Project; index: number })
                 target="_blank"
                 rel="noopener"
                 data-cursor="button"
-                data-sfx="out"
                 className="link-ink px-2 font-mono text-micro uppercase text-dust hover:text-paper"
               >
                 Source ↗<span className="sr-only"> for {project.name} (new tab)</span>

@@ -74,7 +74,7 @@ export default function CameraRig({ stations }: { stations: Station[] }) {
     // Bank slightly into lateral motion and with scroll velocity
     camera.rotation.z += THREE.MathUtils.clamp(-flight.velocity * 0.0009, -0.05, 0.05);
 
-    // Camera velocity (units/sec) for streaks and audio
+    // Camera velocity (units/sec) for star streaks
     const inv = 1 / Math.max(dt, 1e-3);
     const k2 = Math.min(1, dt * 10);
     const dz = lastZ.current - camera.position.z;

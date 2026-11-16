@@ -145,7 +145,6 @@ export default async function WorkPage({ params }: Params) {
                 rel="noopener"
                 data-cursor="button"
                 data-magnetic
-                data-sfx="out"
                 className="inline-flex h-12 items-center gap-3 bg-signal px-6 font-mono text-micro uppercase text-paper transition-colors hover:bg-signal-hi hover:text-void"
               >
                 Visit {host || "live"} ↗
@@ -157,7 +156,6 @@ export default async function WorkPage({ params }: Params) {
                 target="_blank"
                 rel="noopener"
                 data-cursor="button"
-                data-sfx="out"
                 className="inline-flex h-12 items-center border border-line px-5 font-mono text-micro uppercase text-paper transition-colors hover:border-paper"
               >
                 Source code ↗
