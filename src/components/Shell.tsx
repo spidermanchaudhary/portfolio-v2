@@ -12,6 +12,7 @@ import FlightDriver from "./chrome/FlightDriver";
 import RevealDirector from "./chrome/RevealDirector";
 import SceneBoundary from "./SceneBoundary";
 import CommandPalette from "./chrome/CommandPalette";
+import Soundtrack from "./chrome/Soundtrack";
 
 // three.js + R3F + postprocessing live in their own chunk, fetched after
 // first paint — they never block the HTML, LCP or hydration.
@@ -72,6 +73,7 @@ export default function Shell({
       <RevealDirector />
       <TopBar />
       <CommandPalette />
+      <Soundtrack />
       <main id="main" className="relative z-10">
         {children}
       </main>

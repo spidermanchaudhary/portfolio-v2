@@ -5,7 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { blackHoleFragment, blackHoleVertex } from "@/shaders/blackHole";
 import { palette } from "@/lib/palette";
-import { useUniverse } from "@/store/universe";
+import { flight, useUniverse } from "@/store/universe";
 import type { Station } from "../track";
 import { activity, damp, isNear } from "../shared/activity";
 
@@ -14,6 +14,9 @@ const STEPS = { high: 200, medium: 130, low: 80 } as const;
 const SIZE = 22; // world units — billboard diameter
 
 const toCam = new THREE.Vector3();
+const proj = new THREE.Vector3();
+const edgeP = new THREE.Vector3();
+const right = new THREE.Vector3();
 
 /**
  * A ray-traced Schwarzschild black hole on a camera-facing billboard.
@@ -52,13 +55,15 @@ export default function BlackHole({ station, trackIndex }: { station: Station; t
     if (mesh.current) mesh.current.visible = near;
     if (!near || !mesh.current) {
       act.current = 0;
+      flight.hole.on = false;
       return;
     }
     act.current = damp(act.current, Math.max(0.25, activity(trackIndex, 1.6)), 3, dt);
     const u = material.uniforms;
-    u.uTime.value += dt;
+    // Spins up while its soundtrack plays, and breathes with the music
+    u.uTime.value += dt * (useUniverse.getState().soundtrackPlaying ? 2.2 + flight.music * 2 : 1);
     u.uSteps.value = STEPS[quality];
-    u.uIntensity.value = act.current;
+    u.uIntensity.value = act.current * (1 + flight.music * 0.45);
 
     // Face the camera; feed its viewing angle into the virtual camera
     mesh.current.quaternion.copy(state.camera.quaternion);
@@ -68,6 +73,18 @@ export default function BlackHole({ station, trackIndex }: { station: Station; t
     // Base pose looks slightly down onto the disk; parallax nudges it
     u.uIncline.value = damp(u.uIncline.value, 0.16 + toCam.y * 0.35, 4, dt);
     u.uAzimuth.value = damp(u.uAzimuth.value, Math.atan2(toCam.x, toCam.z) * 0.6, 4, dt);
+
+    // Publish the hole's screen position + radius for the DOM click target
+    const { width, height } = state.size;
+    proj.copy(station.anchor).project(state.camera);
+    edgeP.copy(station.anchor).addScaledVector(right.setFromMatrixColumn(state.camera.matrixWorld, 0), SIZE * 0.2 * mesh.current.scale.x).project(state.camera);
+    const x = (proj.x * 0.5 + 0.5) * width;
+    const y = (-proj.y * 0.5 + 0.5) * height;
+    const r = Math.abs((edgeP.x - proj.x) * 0.5 * width);
+    flight.hole.x = x;
+    flight.hole.y = y;
+    flight.hole.r = r;
+    flight.hole.on = proj.z < 1 && act.current > 0.45 && x > -r && x < width + r && y > -r && y < height + r;
   });
 
   return (

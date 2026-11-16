@@ -85,6 +85,16 @@ export default function CommandPalette() {
         },
       },
       {
+        id: "cornfield",
+        group: "Actions" as const,
+        label: "Play Cornfield Chase",
+        hint: "or click the black hole",
+        run: () => {
+          close();
+          set({ soundtrackOpen: true });
+        },
+      },
+      {
         id: "blog",
         group: "Elsewhere" as const,
         label: "Blog",
@@ -104,7 +114,7 @@ export default function CommandPalette() {
         },
       })),
     ];
-  }, [projects, goTo, close, router]);
+  }, [projects, goTo, close, router, set]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
