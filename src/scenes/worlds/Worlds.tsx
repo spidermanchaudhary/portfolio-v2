@@ -56,7 +56,7 @@ function World({ project, station, trackIndex }: { project: Project; station: St
 
   // Planet sits behind the mini-scene, pushed outward from the text panel
   const planetPos = useMemo(
-    () => new THREE.Vector3(station.side * 1.7 * s, 0.6 * s, -5.2 * s),
+    () => new THREE.Vector3(station.side * (1.5 + s * 1.0), 0.6 * s, -5.2 * s),
     [station.side, s]
   );
 
