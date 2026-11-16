@@ -41,6 +41,7 @@ export default function RevealDirector() {
       root.classList.add("anim-ready");
 
       const inHero = (el: Element) => !!el.closest("#top");
+      const narrow = window.matchMedia("(max-width: 767px), (pointer: coarse)").matches;
       // Hero text waits for the Big Bang to play out before typing in
       const heroDelay = (el: Element) => (inHero(el) ? 0.95 : 0);
 
@@ -55,7 +56,9 @@ export default function RevealDirector() {
             stagger: { each: Math.min(0.022, 0.6 / chars.length) },
             delay: heroDelay(el) + (inHero(el) ? i * 0.12 : 0),
           });
-          scramble(chars, 0.75 + chars.length * 0.012, heroDelay(el));
+          // Phones: clean rise only — the scramble's changing glyph widths
+          // reflow words between lines on narrow screens
+          if (!narrow) scramble(chars, 0.75 + chars.length * 0.012, heroDelay(el));
         };
         if (inHero(el) && !booted) return;
         ScrollTrigger.create({ trigger: el, start: "top 88%", once: true, onEnter: play });
@@ -127,6 +130,17 @@ function splitChars(el: HTMLElement) {
 
 /** Decode effect: characters cycle random glyphs, settling left → right. */
 function scramble(chars: HTMLElement[], duration: number, delay: number) {
+  // Lock each letter's width so random glyphs can never shift the layout
+  chars.forEach((ch) => {
+    ch.style.width = `${ch.getBoundingClientRect().width}px`;
+    ch.style.textAlign = "center";
+  });
+  const release = () =>
+    chars.forEach((ch) => {
+      ch.textContent = ch.dataset.c ?? "";
+      ch.style.width = "";
+      ch.style.textAlign = "";
+    });
   const state = { p: 0 };
   gsap.to(state, {
     p: 1,
@@ -144,7 +158,7 @@ function scramble(chars: HTMLElement[], duration: number, delay: number) {
         }
       });
     },
-    onComplete: () => chars.forEach((ch) => (ch.textContent = ch.dataset.c ?? "")),
+    onComplete: release,
   });
 }
 
