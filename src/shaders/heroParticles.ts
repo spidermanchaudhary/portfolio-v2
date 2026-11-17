@@ -21,6 +21,7 @@ uniform float uPixelRatio;
 uniform vec3  uMouse;
 uniform float uMouseForce;
 uniform float uSpin;
+uniform vec3 uTextFit;  // x: baked centre y, y: scale, z: target centre y
 uniform float uBang;   // expansion scale: 0 = singularity, overshoots, settles at 1
 uniform float uBangK;  // linear progress through the bang 0..1
 
@@ -54,7 +55,9 @@ void main() {
 
   // Big Bang: every particle starts at one point and is flung outward
   vec3 dust = position * uBang;
-  vec3 pos = mix(dust, aText, a);
+  // Fit the name into the free space above the HTML headline
+  vec3 text = vec3(aText.xy - vec2(0.0, uTextFit.x), aText.z) * uTextFit.y + vec3(0.0, uTextFit.z, 0.0);
+  vec3 pos = mix(dust, text, a);
   pos = mix(pos, g, m);
   pos = mix(pos, dust * 2.4, s);
 

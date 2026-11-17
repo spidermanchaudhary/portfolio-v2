@@ -47,6 +47,14 @@ export default function HeroField() {
     g.setAttribute("aGalaxy", new THREE.BufferAttribute(f.galaxy, 3));
     g.setAttribute("aSeed", new THREE.BufferAttribute(f.seed, 4));
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 60);
+    // Name's vertical extent, for fitting it to the available space
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (let i = 1; i < f.glyph.length; i += 3) {
+      lo = Math.min(lo, f.glyph[i]);
+      hi = Math.max(hi, f.glyph[i]);
+    }
+    g.userData = { nameY, nameH: hi - lo, nameMid: (hi + lo) / 2 };
     return g;
     // Rebuild only when crossing the portrait/landscape boundary
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -75,6 +83,7 @@ export default function HeroField() {
           uMouse: { value: new THREE.Vector3(99, 99, 0) },
           uMouseForce: { value: 0 },
           uSpin: { value: 0 },
+          uTextFit: { value: new THREE.Vector3(0, 1, 0) },
           uBang: { value: 0 },
           uBangK: { value: 0 },
           uPaper: { value: new THREE.Color(palette.paper) },
@@ -90,6 +99,26 @@ export default function HeroField() {
 
   useFrame((_, dt) => {
     const u = material.uniforms;
+
+    // Tall screens: fit the name between the top bar and the hero text
+    // (measured from the DOM), shrinking it if a short phone leaves less room
+    const fit = u.uTextFit.value as THREE.Vector3;
+    const { nameH, nameMid } = geometry.userData as { nameH: number; nameMid: number };
+    fit.x = nameMid;
+    if (size.width / size.height < 1) {
+      const label = document.querySelector<HTMLElement>("#top [data-reveal]");
+      const top = 64; // below the top bar
+      const bottom = label ? label.getBoundingClientRect().top - 14 : size.height * 0.45;
+      const cam = camera as THREE.PerspectiveCamera;
+      const halfH = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) * cam.position.z; // view half-height at z=0
+      const pxToWorld = (2 * halfH) / size.height;
+      const room = Math.max(0, bottom - top) * pxToWorld;
+      fit.y = THREE.MathUtils.clamp((room * 0.9) / nameH, 0.45, 1);
+      fit.z = halfH - ((top + bottom) / 2) * pxToWorld;
+    } else {
+      fit.y = 1;
+      fit.z = nameMid;
+    }
     const st = state.current;
     const t = flight.t;
     const visible = t < 2.7;
