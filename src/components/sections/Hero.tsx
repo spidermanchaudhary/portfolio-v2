@@ -12,7 +12,7 @@ export default function Hero() {
       id="top"
       data-station="top"
       aria-labelledby="hero-title"
-      className="relative flex h-[100svh] min-h-[560px] flex-col justify-end px-5 pb-8 pt-24 sm:px-8 sm:pb-10 lg:px-12"
+      className="relative flex h-[100svh] min-h-[540px] flex-col justify-end px-5 pb-6 pt-24 sm:px-8 sm:pb-10 lg:px-12"
     >
       <p
         aria-hidden
@@ -21,9 +21,9 @@ export default function Hero() {
         {site.firstName}
       </p>
 
-      <div className="grid grid-cols-12 items-end gap-x-6 gap-y-8">
+      <div className="grid grid-cols-12 items-end gap-x-6 gap-y-5 sm:gap-y-8">
         <div className="col-span-12 lg:col-span-8">
-          <p className="label mb-5 flex items-center gap-3" data-reveal>
+          <p className="label mb-3 flex items-center gap-3 sm:mb-5" data-reveal>
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-signal-hi" aria-hidden />
             {site.role} · {site.affiliation}
           </p>
@@ -41,16 +41,16 @@ export default function Hero() {
           </h1>
         </div>
 
-        <div className="col-span-12 flex flex-col gap-6 lg:col-span-4 lg:items-end lg:text-right">
-          <p className="max-w-xs text-base leading-relaxed text-dust text-pretty" data-reveal>
+        <div className="col-span-12 flex flex-col gap-4 sm:gap-6 lg:col-span-4 lg:items-end lg:text-right">
+          <p className="max-w-xs text-[0.95rem] leading-relaxed text-dust text-pretty sm:text-base" data-reveal>
             {site.lede}
           </p>
-          <div className="flex flex-wrap items-center gap-3 lg:justify-end" data-reveal>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:justify-end" data-reveal>
             <Link
               href="#work"
               data-cursor="button"
               data-magnetic
-              className="group inline-flex h-12 items-center gap-3 bg-signal px-6 font-mono text-micro uppercase text-paper transition-colors hover:bg-signal-hi hover:text-void"
+              className="group inline-flex h-11 items-center gap-2 bg-signal px-4 font-mono sm:h-12 sm:gap-3 sm:px-6 text-micro uppercase text-paper transition-colors hover:bg-signal-hi hover:text-void"
             >
               Enter the universe
               <span aria-hidden className="transition-transform duration-500 ease-out-expo group-hover:translate-y-0.5">
@@ -61,7 +61,7 @@ export default function Hero() {
               href="#launch"
               data-cursor="button"
               data-magnetic
-              className="inline-flex h-12 items-center border border-line px-5 font-mono text-micro uppercase text-paper transition-colors hover:border-paper"
+              className="inline-flex h-11 items-center border border-line px-4 font-mono sm:h-12 sm:px-5 text-micro uppercase text-paper transition-colors hover:border-paper"
             >
               Get in touch
             </Link>
@@ -69,7 +69,7 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="mt-10 flex items-center justify-between border-t border-line pt-4">
+      <div className="mt-6 flex items-center justify-between border-t border-line pt-3 sm:mt-10 sm:pt-4">
         <span className="label">{site.status}</span>
         <span className="label hidden sm:inline">Scroll to fly</span>
         <span className="label">{site.location}</span>
