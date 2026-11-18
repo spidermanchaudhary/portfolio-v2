@@ -20,7 +20,20 @@ import CursorLight from "./CursorLight";
 import HyperTunnel from "./HyperTunnel";
 import BangShock from "./hero/BangShock";
 
-const TIERS: Quality[] = ["low", "medium", "high"];
+/**
+ * Adaptive quality ladder, worst → best. Below the "low" tier the scene
+ * keeps everything and just renders at a lower resolution (the bloom and
+ * soft particles hide it well), so weak laptops stay smooth instead of
+ * stuttering at full resolution.
+ */
+const LADDER: { quality: Quality; dpr: number }[] = [
+  { quality: "low", dpr: 0.6 },
+  { quality: "low", dpr: 0.8 },
+  { quality: "low", dpr: 1 },
+  { quality: "medium", dpr: 1 },
+  { quality: "high", dpr: 1 },
+];
+const rungOf = (q: Quality) => LADDER.findIndex((r) => r.quality === q && r.dpr === 1);
 
 /**
  * The persistent WebGL universe. Mounted once in the layout (client-only,
@@ -30,14 +43,21 @@ const TIERS: Quality[] = ["low", "medium", "high"];
 export default function Universe() {
   const quality = useUniverse((s) => s.quality);
   const set = useUniverse((s) => s.set);
-  const [dpr, setDpr] = useState(() => Math.min(window.devicePixelRatio, MAX_DPR[quality]));
+  const [scale, setScale] = useState(1);
+  const dprFor = (q: Quality, k: number) => Math.min(window.devicePixelRatio, MAX_DPR[q]) * k;
+  const [dpr, setDpr] = useState(() => dprFor(quality, 1));
   const readyAt = useRef(performance.now());
+  const rung = useRef(rungOf(quality));
+  /** Highest rung still allowed: once a rung proved too heavy it's never
+   *  retried, so the monitor can't flip back and forth (every flip costs a
+   *  resize + shader recompile, which is itself a visible hitch) */
+  const ceiling = useRef(LADDER.length - 1);
 
   useEffect(() => {
-    setDpr(Math.min(window.devicePixelRatio, MAX_DPR[quality]));
+    setDpr(dprFor(quality, scale));
     // Low tier drops WebGL post — the CSS grain overlay takes over
     document.documentElement.classList.toggle("q-low", quality === "low");
-  }, [quality]);
+  }, [quality, scale]);
 
   const step = (dir: 1 | -1) => {
     const st = useUniverse.getState();
@@ -45,9 +65,13 @@ export default function Universe() {
     // Ignore dips that are expected and brief: shader warm-up right after
     // load, and page-transition jumps
     if (dir < 0 && (performance.now() - readyAt.current < 6000 || warpAmount() > 0)) return;
-    const i = TIERS.indexOf(useUniverse.getState().quality);
-    const next = TIERS[THREE.MathUtils.clamp(i + dir, 0, TIERS.length - 1)];
-    if (next !== TIERS[i]) set({ quality: next });
+    const from = rung.current;
+    const to = THREE.MathUtils.clamp(from + dir, 0, ceiling.current);
+    if (dir < 0) ceiling.current = Math.min(ceiling.current, to);
+    if (to === from) return;
+    rung.current = to;
+    setScale(LADDER[to].dpr);
+    if (LADDER[to].quality !== st.quality) set({ quality: LADDER[to].quality });
   };
 
   return (
@@ -65,12 +89,14 @@ export default function Universe() {
       }}
     >
       <PerformanceMonitor
-        // Sample ~2s windows; three flips and it settles for good
+        // Sample ~2.5s windows; with the ceiling above it can only climb
+        // until something fails, then it only ever steps down
         flipflops={8}
         bounds={(refresh) => (refresh > 90 ? [48, 80] : [38, 55])}
         onDecline={() => step(-1)}
         onIncline={() => step(1)}
-        onFallback={() => !useUniverse.getState().qualityLocked && set({ quality: "low" })}
+        // Kept flip-flopping anyway: settle one rung down for good
+        onFallback={() => step(-1)}
       >
         <Scene />
       </PerformanceMonitor>
