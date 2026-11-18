@@ -29,9 +29,10 @@ export default function HeroField() {
   const gl = useThree((s) => s.gl);
   const points = useRef<THREE.Points>(null);
 
-  // Count is fixed for the whole visit (picked from the initial tier).
-  // Adaptive quality later changes resolution/post only — never the name,
-  // so it can't thin out or dim mid-visit.
+  // Buffers are built once for the initial tier. If the device later has
+  // to step down, only a prefix is drawn (particles are random, so it's an
+  // even subset) and each point grows to compensate — the name keeps its
+  // density and glow, it just costs a quarter of the vertex work.
   const initialCount = useRef(PARTICLES[quality]);
   const aspect = size.width / size.height;
   const aspectKey = aspect >= 1 ? "wide" : "tall";
@@ -76,9 +77,7 @@ export default function HeroField() {
           uAssemble: { value: 0 },
           uMorph: { value: 0 },
           uScatter: { value: 0 },
-          // Fewer particles (weak devices) → slightly larger points, so the
-          // name keeps the same density and glow
-          uSize: { value: 1.6 * Math.sqrt(PARTICLES.high / initialCount.current) },
+          uSize: { value: 1.6 }, // set per tier below
           uPixelRatio: { value: 1 },
           uMouse: { value: new THREE.Vector3(99, 99, 0) },
           uMouseForce: { value: 0 },
@@ -94,6 +93,13 @@ export default function HeroField() {
   );
 
   useEffect(() => () => material.dispose(), [material]);
+
+  useEffect(() => {
+    const n = Math.min(initialCount.current, PARTICLES[quality]);
+    geometry.setDrawRange(0, n);
+    // Fewer particles (weak devices) → slightly larger points
+    material.uniforms.uSize.value = 1.6 * Math.sqrt(PARTICLES.high / n);
+  }, [quality, geometry, material]);
 
   const state = useRef({ assemble: 0, mouse: new THREE.Vector3(99, 99, 0), force: 0, lastX: 0, lastY: 0, spin: 0 });
 

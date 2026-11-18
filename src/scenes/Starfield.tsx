@@ -67,9 +67,12 @@ void main() {
  */
 export default function Starfield() {
   const quality = useUniverse((s) => s.quality);
-  const count = STARS[quality];
 
+  // Built once at the full budget; tiers only change the draw range. (The
+  // stars are random, so any prefix is an even subset — and the sky doesn't
+  // reshuffle when the adaptive quality steps down mid-flight.)
   const { stars, streaks } = useMemo(() => {
+    const count = STARS.high;
     const pos = new Float32Array(count * 3);
     const seed = new Float32Array(count * 2);
     for (let i = 0; i < count; i++) {
@@ -102,7 +105,13 @@ export default function Starfield() {
     streaks.setAttribute("position", new THREE.BufferAttribute(sPos, 3));
     streaks.setAttribute("aEnd", new THREE.BufferAttribute(sEnd, 1));
     return { stars, streaks };
-  }, [count]);
+  }, []);
+
+  useEffect(() => {
+    stars.setDrawRange(0, STARS[quality]);
+    // Streaks are the first third of the stars, two vertices each
+    streaks.setDrawRange(0, Math.floor(STARS[quality] / 3) * 2);
+  }, [quality, stars, streaks]);
 
   useEffect(
     () => () => {

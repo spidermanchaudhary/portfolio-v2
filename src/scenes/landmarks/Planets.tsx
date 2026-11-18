@@ -176,6 +176,8 @@ function Planet({
   const fade = useRef(0);
   const target = useRef<THREE.WebGLRenderTarget | null>(null);
   const band = useRef(0);
+  /** Band count of the bake in progress (fixed per bake, even if the tier changes mid-way) */
+  const bands = useRef(1);
 
   const center = useMemo(() => {
     const [x, y, z] = def.offset;
@@ -259,8 +261,11 @@ function Planet({
     },
     [material, bakeMat, atmoMat]
   );
-  // A new tier means a new bake (different resolution/octaves)
-  useEffect(() => release, [bakeMat]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Free the bake on unmount. A tier change does NOT re-bake: a finished
+  // surface is kept (re-baking would blank the planet mid-flight and cost a
+  // heavy frame exactly when the device is struggling); the next bake simply
+  // uses the new tier's resolution/octaves.
+  useEffect(() => release, [material]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useFrame((state, dt) => {
     const g = group.current;
@@ -291,12 +296,13 @@ function Planet({
       }
       target.current = rt;
       band.current = 0;
+      bands.current = BANDS[quality];
     }
     const rt = target.current;
-    const bands = BANDS[quality];
-    if (rt && band.current < bands && lastBake !== state.clock.elapsedTime) {
+    const nb = bands.current;
+    if (rt && band.current < nb && lastBake !== state.clock.elapsedTime) {
       lastBake = state.clock.elapsedTime;
-      const bh = Math.ceil(rt.height / bands);
+      const bh = Math.ceil(rt.height / nb);
       rt.scissor.set(0, band.current * bh, rt.width, bh);
       rt.scissorTest = true;
       bakeQuad.material = bakeMat;
@@ -305,12 +311,12 @@ function Planet({
       state.gl.render(bakeScene, bakeCam);
       state.gl.setRenderTarget(prev);
       band.current++;
-      if (band.current === bands) {
+      if (band.current === nb) {
         material.uniforms.uMapA.value = rt.textures[0];
         material.uniforms.uMapB.value = rt.textures[1];
       }
     }
-    const ready = !!rt && band.current >= bands;
+    const ready = !!rt && band.current >= nb;
 
     // Visible only on its stretch of the flight: from its `from` station
     // until the camera has passed it
